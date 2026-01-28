@@ -436,6 +436,10 @@ select {
     position: relative;
 }
 
+.view-container {
+    position: relative;
+}
+
 .draggable-header {
     cursor: move;
     user-select: none;
@@ -478,15 +482,15 @@ select {
 }
 
 #mapSearchBar {
-    position: fixed;
-    top: 100px;
-    left: 20px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
     width: 320px;
     background: white;
     border: 2px solid #4CAF50;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 9999;
+    z-index: 1000;
 }
 
 #searchBarHeader {
@@ -498,6 +502,7 @@ select {
     align-items: center;
     font-weight: bold;
     border-radius: 6px 6px 0 0;
+    cursor: default;
 }
 
 #searchBarHeader .minimize-btn {
@@ -556,4 +561,177 @@ select {
 
 .collapsed #searchBarContent {
     display: none;
+}
+
+@media (max-width: 768px) {
+    #navbar {
+        flex-direction: column;
+        padding: 0.75rem;
+    }
+
+    #navbar button {
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+    #userNavbar, #adminNavbar, #developerNavbar, #publisherNavbar {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        align-items: stretch;
+    }
+
+    #userNavbar h2, #adminNavbar h2, #developerNavbar h2, #publisherNavbar h2 {
+        font-size: 1.2rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .nav-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .nav-buttons button {
+        width: 100%;
+    }
+
+    .content {
+        padding: 1rem;
+    }
+
+    .content h1 {
+        font-size: 1.5rem;
+    }
+
+    .flyer-section {
+        padding: 1rem;
+    }
+
+    .flyer-table {
+        font-size: 0.85rem;
+    }
+
+    .flyer-table th,
+    .flyer-table td {
+        padding: 0.5rem;
+    }
+
+    .flyer-table th {
+        font-size: 0.75rem;
+    }
+
+    .flyer-actions {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .flyer-actions button {
+        width: 100%;
+        font-size: 0.8rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 1.5rem;
+    }
+
+    #devConsole {
+        width: calc(100% - 20px);
+        max-width: 450px;
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        margin: 0 auto;
+    }
+
+    #mapSearchBar {
+        width: calc(100% - 20px);
+        max-width: 320px;
+        top: 10px;
+        right: 10px;
+        left: auto;
+    }
+
+    .map-container {
+        height: calc(100vh - 220px);
+    }
+
+    .action-btn {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #userNavbar h2, #adminNavbar h2, #developerNavbar h2, #publisherNavbar h2 {
+        font-size: 1rem;
+    }
+
+    .content h1 {
+        font-size: 1.2rem;
+    }
+
+    .flyer-section h2 {
+        font-size: 1.1rem;
+    }
+
+    .flyer-table {
+        font-size: 0.75rem;
+        display: block;
+        overflow-x: auto;
+    }
+
+    .flyer-table thead {
+        display: none;
+    }
+
+    .flyer-table tbody, .flyer-table tr, .flyer-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .flyer-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .flyer-table td {
+        text-align: right;
+        padding: 0.5rem;
+        position: relative;
+        padding-left: 50%;
+        border-bottom: 1px solid #eee;
+    }
+
+    .flyer-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.5rem;
+        width: 45%;
+        padding-right: 0.5rem;
+        text-align: left;
+        font-weight: bold;
+        color: #4CAF50;
+    }
+
+    .flyer-actions {
+        justify-content: flex-end;
+    }
+
+    #mapSearchBar {
+        width: calc(100% - 20px);
+        right: 10px;
+    }
+
+    #devConsole {
+        width: calc(100% - 20px);
+    }
+
+    .map-container {
+        height: calc(100vh - 240px);
+    }
 }

@@ -895,7 +895,9 @@ function setupViewSwitcher(role) {
                 maps[role].invalidateSize();
             }
 
-            document.getElementById('mapSearchBar').style.display = 'block';
+            const searchBar = document.getElementById('mapSearchBar');
+            searchBar.style.display = 'block';
+            mapView.appendChild(searchBar);
         } else {
             flyerView.style.display = 'block';
             mapView.style.display = 'none';
@@ -938,14 +940,24 @@ function initMap(role, mapId) {
         maxZoom: 19
     });
 
+    const transportLayer = L.tileLayer('https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors, Map: MeMoMaps',
+        maxZoom: 18,
+        opacity: 0.7
+    });
+
     const baseMaps = {
         "Standard": osmStandard,
         "Cycle Map": osmCycle,
         "Humanitarian": osmHumanitarian
     };
 
+    const overlayMaps = {
+        "Trasporti Pubblici": transportLayer
+    };
+
     osmStandard.addTo(map);
-    L.control.layers(baseMaps).addTo(map);
+    L.control.layers(baseMaps, overlayMaps).addTo(map);
 
     maps[role] = map;
 
@@ -958,7 +970,6 @@ setupViewSwitcher('developer');
 setupViewSwitcher('publisher');
 
 makeDraggable(document.getElementById('devConsole'));
-makeDraggable(document.getElementById('mapSearchBar'));
 
 function makeDraggable(element) {
     if (!element) return;
