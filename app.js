@@ -27,25 +27,8 @@ document.getElementById('clearDevConsole')?.addEventListener('click', () => {
     devLog('Console pulita', 'info');
 });
 
-devLog('App inizializzata', 'success');
-devLog('Connessione a Supabase stabilita', 'success');
-
-const savedUser = localStorage.getItem('currentUser');
-if (savedUser) {
-    try {
-        currentUser = JSON.parse(savedUser);
-        devLog(`Utente ripristinato da localStorage: ${currentUser.nickname}`, 'success');
-        showDashboard(currentUser.role);
-    } catch (error) {
-        devLog('Errore ripristino sessione', 'error');
-        localStorage.removeItem('currentUser');
-        currentUser = null;
-    }
-}
-
-if (!currentUser) {
-    loadFlyers();
-}
+let currentUser = null;
+let currentEditingFlyer = null;
 
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
@@ -62,8 +45,30 @@ const publisherSection = document.getElementById('publisherSection');
 const flyerModal = document.getElementById('flyerModal');
 const userManagementModal = document.getElementById('userManagementModal');
 
-let currentUser = null;
-let currentEditingFlyer = null;
+devLog('App inizializzata', 'success');
+devLog('Connessione a Supabase stabilita', 'success');
+
+devLog('Controllo sessione salvata...', 'info');
+const savedUser = localStorage.getItem('currentUser');
+devLog(`localStorage.getItem('currentUser'): ${savedUser ? 'TROVATO' : 'NON TROVATO'}`, savedUser ? 'success' : 'warning');
+
+if (savedUser) {
+    try {
+        currentUser = JSON.parse(savedUser);
+        devLog(`Utente ripristinato: ${currentUser.nickname} (${currentUser.role})`, 'success');
+        devLog('Chiamo showDashboard()...', 'info');
+        showDashboard(currentUser.role);
+    } catch (error) {
+        devLog(`Errore ripristino sessione: ${error.message}`, 'error');
+        localStorage.removeItem('currentUser');
+        currentUser = null;
+    }
+}
+
+if (!currentUser) {
+    devLog('Nessun utente salvato, carico flyer pubblici', 'info');
+    loadFlyers();
+}
 
 loginBtn.addEventListener('click', () => {
     devLog('Modal login aperto', 'info');
