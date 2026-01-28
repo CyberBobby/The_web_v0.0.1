@@ -91,7 +91,7 @@ body {
     background-color: #45a049;
 }
 
-#userNavbar, #adminNavbar {
+#userNavbar, #adminNavbar, #developerNavbar, #publisherNavbar {
     background-color: #333;
     padding: 1rem;
     display: flex;
@@ -99,11 +99,11 @@ body {
     align-items: center;
 }
 
-#userNavbar h2, #adminNavbar h2 {
+#userNavbar h2, #adminNavbar h2, #developerNavbar h2, #publisherNavbar h2 {
     color: white;
 }
 
-#userLogoutBtn, #adminLogoutBtn {
+#userLogoutBtn, #adminLogoutBtn, #developerLogoutBtn, #publisherLogoutBtn {
     background-color: #f44336;
     color: white;
     border: none;
@@ -112,7 +112,7 @@ body {
     border-radius: 4px;
 }
 
-#userLogoutBtn:hover, #adminLogoutBtn:hover {
+#userLogoutBtn:hover, #adminLogoutBtn:hover, #developerLogoutBtn:hover, #publisherLogoutBtn:hover {
     background-color: #da190b;
 }
 
@@ -256,4 +256,128 @@ body {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+    background-color: #45a049;
+}
+
+.flyer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.flyer-actions button {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.edit-btn {
+    background-color: #2196F3;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #0b7dda;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #da190b;
+}
+
+.approve-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.approve-btn:hover {
+    background-color: #45a049;
+}
+
+.reject-btn {
+    background-color: #ff9800;
+    color: white;
+}
+
+.reject-btn:hover {
+    background-color: #e68900;
+}
+
+.manage-btn {
+    background-color: #9C27B0;
+    color: white;
+}
+
+.manage-btn:hover {
+    background-color: #7b1fa2;
+}
+
+.request-status {
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+#publisherFideltyStatus {
+    padding: 0.5rem;
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196F3;
+    margin-top: 1rem;
+    font-weight: bold;
 }

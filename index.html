@@ -72,7 +72,99 @@
 
             <div class="flyer-section">
                 <h2>Eventi</h2>
+                <button id="addFlyerBtnAdmin" class="action-btn">Aggiungi Flyer</button>
                 <div id="flyerContainerAdmin"></div>
+            </div>
+
+            <div class="flyer-section">
+                <h2>Richieste Flyer in Attesa</h2>
+                <div id="requestsContainerAdmin"></div>
+            </div>
+        </div>
+
+        <div id="developerSection" style="display: none;">
+            <nav id="developerNavbar">
+                <h2>Benvenuto Developer</h2>
+                <button id="developerLogoutBtn">Logout</button>
+            </nav>
+            <div class="content">
+                <h1>Dashboard Developer</h1>
+                <p>Gestisci i permessi e i flyer.</p>
+            </div>
+
+            <div class="flyer-section">
+                <h2>Eventi</h2>
+                <button id="addFlyerBtnDev" class="action-btn">Aggiungi Flyer</button>
+                <div id="flyerContainerDeveloper"></div>
+            </div>
+
+            <div class="flyer-section">
+                <h2>Richieste Flyer in Attesa</h2>
+                <div id="requestsContainerDeveloper"></div>
+            </div>
+
+            <div class="flyer-section">
+                <h2>Gestione Utenti Publisher</h2>
+                <div id="publishersContainer"></div>
+            </div>
+        </div>
+
+        <div id="publisherSection" style="display: none;">
+            <nav id="publisherNavbar">
+                <h2>Benvenuto Publisher</h2>
+                <button id="publisherLogoutBtn">Logout</button>
+            </nav>
+            <div class="content">
+                <h1>Dashboard Publisher</h1>
+                <p>Crea e gestisci i tuoi flyer.</p>
+                <p id="publisherFideltyStatus"></p>
+            </div>
+
+            <div class="flyer-section">
+                <h2>Eventi</h2>
+                <button id="addFlyerBtnPublisher" class="action-btn">Aggiungi Flyer</button>
+                <div id="flyerContainerPublisher"></div>
+            </div>
+
+            <div class="flyer-section">
+                <h2>Tue Richieste</h2>
+                <div id="myRequestsContainer"></div>
+            </div>
+        </div>
+
+        <div id="flyerModal" class="modal">
+            <div class="modal-content">
+                <span class="close" data-modal="flyerModal">&times;</span>
+                <h2 id="flyerModalTitle">Aggiungi Flyer</h2>
+                <form id="flyerForm">
+                    <input type="hidden" id="flyerId">
+                    <input type="text" id="flyerNome" placeholder="Nome Evento" required>
+                    <input type="date" id="flyerData" required>
+                    <input type="text" id="flyerCrew" placeholder="Crew" required>
+                    <textarea id="flyerDescrizione" placeholder="Descrizione" rows="4" required></textarea>
+                    <button type="submit">Salva</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="userManagementModal" class="modal">
+            <div class="modal-content">
+                <span class="close" data-modal="userManagementModal">&times;</span>
+                <h2>Gestisci Permessi Publisher</h2>
+                <div id="userManagementContent">
+                    <p><strong>Nickname:</strong> <span id="managedUserNickname"></span></p>
+                    <p><strong>Fidelty attuale:</strong> <span id="managedUserFidelty"></span></p>
+                    <form id="userManagementForm">
+                        <input type="hidden" id="managedUserNicknameInput">
+                        <label for="newFidelty">Nuovo stato Fidelty:</label>
+                        <select id="newFidelty" required>
+                            <option value="friendly">Friendly (può postare direttamente)</option>
+                            <option value="pending">Pending (deve fare richieste)</option>
+                            <option value="restricted">Restricted (non può postare)</option>
+                        </select>
+                        <button type="submit">Aggiorna</button>
+                    </form>
+                </div>
             </div>
         </div>
 
