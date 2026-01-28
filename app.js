@@ -32,6 +32,18 @@ devLog('Connessione a Supabase stabilita', 'success');
 
 loadFlyers();
 
+const savedUser = localStorage.getItem('currentUser');
+if (savedUser) {
+    try {
+        currentUser = JSON.parse(savedUser);
+        devLog(`Utente ripristinato da localStorage: ${currentUser.nickname}`, 'success');
+        showDashboard(currentUser.role);
+    } catch (error) {
+        devLog('Errore ripristino sessione', 'error');
+        localStorage.removeItem('currentUser');
+    }
+}
+
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
 const loginModal = document.getElementById('loginModal');
@@ -126,8 +138,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
         if (data && data.length > 0) {
             currentUser = data[0];
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
             devLog(`Login riuscito! Ruolo utente: ${currentUser.role}`, 'success');
             devLog(`Dati utente ricevuti: ID=${currentUser.id}`, 'info');
+            devLog('Sessione salvata in localStorage', 'success');
             loginModal.style.display = 'none';
             document.getElementById('loginForm').reset();
             showDashboard(currentUser.role);
@@ -187,6 +201,8 @@ function showDashboard(role) {
 function logout() {
     devLog(`Logout eseguito per utente: ${currentUser?.nickname || 'sconosciuto'}`, 'info');
     currentUser = null;
+    localStorage.removeItem('currentUser');
+    devLog('Sessione rimossa da localStorage', 'info');
     authSection.style.display = 'block';
     userSection.style.display = 'none';
     adminSection.style.display = 'none';
@@ -846,5 +862,208 @@ document.getElementById('exportDbBtn')?.addEventListener('click', async () => {
     } catch (error) {
         devLog(`Errore esportazione: ${error.message}`, 'error');
         alert('Errore durante l\'esportazione: ' + error.message);
+    }
+});
+
+let maps = {};
+let currentView = {};
+
+function setupViewSwitcher(role) {
+    const btnId = `${role}ViewSwitchBtn`;
+    const flyerViewId = `${role}FlyerView`;
+    const mapViewId = `${role}MapView`;
+    const mapId = `${role}Map`;
+
+    currentView[role] = 'flyer';
+
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+        const flyerView = document.getElementById(flyerViewId);
+        const mapView = document.getElementById(mapViewId);
+
+        if (currentView[role] === 'flyer') {
+            flyerView.style.display = 'none';
+            mapView.style.display = 'block';
+            btn.textContent = 'Flyer';
+            currentView[role] = 'map';
+
+            if (!maps[role]) {
+                initMap(role, mapId);
+            } else {
+                maps[role].invalidateSize();
+            }
+
+            document.getElementById('mapSearchBar').style.display = 'block';
+        } else {
+            flyerView.style.display = 'block';
+            mapView.style.display = 'none';
+            btn.textContent = 'Mappa';
+            currentView[role] = 'flyer';
+            document.getElementById('mapSearchBar').style.display = 'none';
+        }
+    });
+}
+
+function initMap(role, mapId) {
+    devLog(`Inizializzazione mappa per ${role}...`, 'info');
+
+    const northItalyBounds = [
+        [43.5, 6.5],
+        [47.0, 13.5]
+    ];
+
+    const map = L.map(mapId, {
+        center: [45.7440, 8.7396],
+        zoom: 9,
+        maxBounds: northItalyBounds,
+        maxBoundsViscosity: 1.0,
+        minZoom: 8,
+        maxZoom: 18
+    });
+
+    const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    });
+
+    const osmCycle = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors, CyclOSM',
+        maxZoom: 19
+    });
+
+    const osmHumanitarian = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors, Humanitarian',
+        maxZoom: 19
+    });
+
+    const baseMaps = {
+        "Standard": osmStandard,
+        "Cycle Map": osmCycle,
+        "Humanitarian": osmHumanitarian
+    };
+
+    osmStandard.addTo(map);
+    L.control.layers(baseMaps).addTo(map);
+
+    maps[role] = map;
+
+    devLog('Mappa inizializzata con successo', 'success');
+}
+
+setupViewSwitcher('user');
+setupViewSwitcher('admin');
+setupViewSwitcher('developer');
+setupViewSwitcher('publisher');
+
+makeDraggable(document.getElementById('devConsole'));
+makeDraggable(document.getElementById('mapSearchBar'));
+
+function makeDraggable(element) {
+    if (!element) return;
+
+    const header = element.querySelector('.draggable-header');
+    if (!header) return;
+
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    header.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        element.style.top = (element.offsetTop - pos2) + 'px';
+        element.style.left = (element.offsetLeft - pos1) + 'px';
+        element.style.bottom = 'auto';
+        element.style.right = 'auto';
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+document.getElementById('toggleDevConsole')?.addEventListener('click', () => {
+    const devConsole = document.getElementById('devConsole');
+    const toggleBtn = document.getElementById('toggleDevConsole');
+
+    if (devConsole.classList.contains('collapsed')) {
+        devConsole.classList.remove('collapsed');
+        toggleBtn.textContent = '−';
+    } else {
+        devConsole.classList.add('collapsed');
+        toggleBtn.textContent = '+';
+    }
+});
+
+document.getElementById('toggleSearchBar')?.addEventListener('click', () => {
+    const searchBar = document.getElementById('mapSearchBar');
+    const toggleBtn = document.getElementById('toggleSearchBar');
+
+    if (searchBar.classList.contains('collapsed')) {
+        searchBar.classList.remove('collapsed');
+        toggleBtn.textContent = '−';
+    } else {
+        searchBar.classList.add('collapsed');
+        toggleBtn.textContent = '+';
+    }
+});
+
+document.getElementById('mapSearchBtn')?.addEventListener('click', async () => {
+    const query = document.getElementById('mapSearchInput').value;
+    if (!query) return;
+
+    devLog(`Ricerca località: ${query}`, 'info');
+
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=it&limit=5`);
+        const data = await response.json();
+
+        const resultsDiv = document.getElementById('searchResults');
+        resultsDiv.innerHTML = '';
+
+        if (data.length === 0) {
+            resultsDiv.innerHTML = '<div style="padding: 8px; color: #888;">Nessun risultato trovato</div>';
+            return;
+        }
+
+        data.forEach(result => {
+            const item = document.createElement('div');
+            item.className = 'search-result-item';
+            item.textContent = result.display_name;
+            item.onclick = () => {
+                const currentRole = currentUser?.role || 'user';
+                if (maps[currentRole]) {
+                    maps[currentRole].setView([result.lat, result.lon], 13);
+                    L.marker([result.lat, result.lon]).addTo(maps[currentRole])
+                        .bindPopup(result.display_name)
+                        .openPopup();
+                }
+            };
+            resultsDiv.appendChild(item);
+        });
+
+        devLog(`${data.length} risultati trovati`, 'success');
+    } catch (error) {
+        devLog(`Errore ricerca: ${error.message}`, 'error');
+    }
+});
+
+document.getElementById('mapSearchInput')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        document.getElementById('mapSearchBtn').click();
     }
 });

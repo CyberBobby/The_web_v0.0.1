@@ -161,22 +161,9 @@ body {
     align-items: center;
     font-weight: bold;
     border-radius: 6px 6px 0 0;
+    cursor: move;
 }
 
-#clearDevConsole {
-    background: white;
-    color: #007bff;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-#clearDevConsole:hover {
-    background: #f0f0f0;
-}
 
 #devConsoleContent {
     padding: 10px;
@@ -423,4 +410,150 @@ select {
 
 .dev-tool-btn:active {
     transform: scale(0.95);
+}
+
+.view-switch-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.view-switch-btn:hover {
+    background-color: #0b7dda;
+}
+
+.view-container {
+    width: 100%;
+}
+
+.map-container {
+    width: 100%;
+    height: calc(100vh - 180px);
+    position: relative;
+}
+
+.draggable-header {
+    cursor: move;
+    user-select: none;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.minimize-btn {
+    background: white;
+    color: #007bff;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.minimize-btn:hover {
+    background: #f0f0f0;
+}
+
+.clear-btn {
+    background: white;
+    color: #007bff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.clear-btn:hover {
+    background: #f0f0f0;
+}
+
+#mapSearchBar {
+    position: fixed;
+    top: 100px;
+    left: 20px;
+    width: 320px;
+    background: white;
+    border: 2px solid #4CAF50;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+}
+
+#searchBarHeader {
+    background: #4CAF50;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    border-radius: 6px 6px 0 0;
+}
+
+#searchBarHeader .minimize-btn {
+    color: #4CAF50;
+}
+
+#searchBarContent {
+    padding: 15px;
+}
+
+#mapSearchInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+#mapSearchBtn {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#mapSearchBtn:hover {
+    background-color: #45a049;
+}
+
+#searchResults {
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.search-result-item:hover {
+    background-color: #f5f5f5;
+}
+
+.collapsed #devConsoleContent,
+.collapsed #devToolsMenu {
+    display: none;
+}
+
+.collapsed #searchBarContent {
+    display: none;
 }

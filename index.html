@@ -4,7 +4,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>App con Login</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <link rel="stylesheet" href="style.css">
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     </head>
 
     <body>
@@ -48,6 +50,7 @@
             <nav id="userNavbar">
                 <h2>Benvenuto Utente</h2>
                 <div class="nav-buttons">
+                    <button id="userViewSwitchBtn" class="view-switch-btn">Mappa</button>
                     <button id="userLogoutBtn">Logout</button>
                 </div>
             </nav>
@@ -56,9 +59,15 @@
                 <p>Questa è la tua area personale.</p>
             </div>
 
-            <div class="flyer-section">
-                <h2>Eventi</h2>
-                <div id="flyerContainerUser"></div>
+            <div id="userFlyerView" class="view-container">
+                <div class="flyer-section">
+                    <h2>Eventi</h2>
+                    <div id="flyerContainerUser"></div>
+                </div>
+            </div>
+
+            <div id="userMapView" class="view-container" style="display: none;">
+                <div id="userMap" class="map-container"></div>
             </div>
         </div>
 
@@ -66,6 +75,7 @@
             <nav id="adminNavbar">
                 <h2>Benvenuto Admin</h2>
                 <div class="nav-buttons">
+                    <button id="adminViewSwitchBtn" class="view-switch-btn">Mappa</button>
                     <button id="adminLogoutBtn">Logout</button>
                 </div>
             </nav>
@@ -74,15 +84,21 @@
                 <p>Gestisci gli utenti e le impostazioni del sistema.</p>
             </div>
 
-            <div class="flyer-section">
-                <h2>Eventi</h2>
-                <button id="addFlyerBtnAdmin" class="action-btn">Aggiungi Flyer</button>
-                <div id="flyerContainerAdmin"></div>
+            <div id="adminFlyerView" class="view-container">
+                <div class="flyer-section">
+                    <h2>Eventi</h2>
+                    <button id="addFlyerBtnAdmin" class="action-btn">Aggiungi Flyer</button>
+                    <div id="flyerContainerAdmin"></div>
+                </div>
+
+                <div class="flyer-section">
+                    <h2>Richieste Flyer in Attesa</h2>
+                    <div id="requestsContainerAdmin"></div>
+                </div>
             </div>
 
-            <div class="flyer-section">
-                <h2>Richieste Flyer in Attesa</h2>
-                <div id="requestsContainerAdmin"></div>
+            <div id="adminMapView" class="view-container" style="display: none;">
+                <div id="adminMap" class="map-container"></div>
             </div>
         </div>
 
@@ -90,6 +106,7 @@
             <nav id="developerNavbar">
                 <h2>Benvenuto Developer</h2>
                 <div class="nav-buttons">
+                    <button id="developerViewSwitchBtn" class="view-switch-btn">Mappa</button>
                     <button id="developerLogoutBtn">Logout</button>
                 </div>
             </nav>
@@ -98,20 +115,26 @@
                 <p>Gestisci i permessi e i flyer.</p>
             </div>
 
-            <div class="flyer-section">
-                <h2>Eventi</h2>
-                <button id="addFlyerBtnDev" class="action-btn">Aggiungi Flyer</button>
-                <div id="flyerContainerDeveloper"></div>
+            <div id="developerFlyerView" class="view-container">
+                <div class="flyer-section">
+                    <h2>Eventi</h2>
+                    <button id="addFlyerBtnDev" class="action-btn">Aggiungi Flyer</button>
+                    <div id="flyerContainerDeveloper"></div>
+                </div>
+
+                <div class="flyer-section">
+                    <h2>Richieste Flyer in Attesa</h2>
+                    <div id="requestsContainerDeveloper"></div>
+                </div>
+
+                <div class="flyer-section">
+                    <h2>Gestione Utenti Publisher</h2>
+                    <div id="publishersContainer"></div>
+                </div>
             </div>
 
-            <div class="flyer-section">
-                <h2>Richieste Flyer in Attesa</h2>
-                <div id="requestsContainerDeveloper"></div>
-            </div>
-
-            <div class="flyer-section">
-                <h2>Gestione Utenti Publisher</h2>
-                <div id="publishersContainer"></div>
+            <div id="developerMapView" class="view-container" style="display: none;">
+                <div id="developerMap" class="map-container"></div>
             </div>
         </div>
 
@@ -119,6 +142,7 @@
             <nav id="publisherNavbar">
                 <h2>Benvenuto Publisher</h2>
                 <div class="nav-buttons">
+                    <button id="publisherViewSwitchBtn" class="view-switch-btn">Mappa</button>
                     <button id="publisherLogoutBtn">Logout</button>
                 </div>
             </nav>
@@ -128,15 +152,21 @@
                 <p id="publisherFideltyStatus"></p>
             </div>
 
-            <div class="flyer-section">
-                <h2>Eventi</h2>
-                <button id="addFlyerBtnPublisher" class="action-btn">Aggiungi Flyer</button>
-                <div id="flyerContainerPublisher"></div>
+            <div id="publisherFlyerView" class="view-container">
+                <div class="flyer-section">
+                    <h2>Eventi</h2>
+                    <button id="addFlyerBtnPublisher" class="action-btn">Aggiungi Flyer</button>
+                    <div id="flyerContainerPublisher"></div>
+                </div>
+
+                <div class="flyer-section">
+                    <h2>Tue Richieste</h2>
+                    <div id="myRequestsContainer"></div>
+                </div>
             </div>
 
-            <div class="flyer-section">
-                <h2>Tue Richieste</h2>
-                <div id="myRequestsContainer"></div>
+            <div id="publisherMapView" class="view-container" style="display: none;">
+                <div id="publisherMap" class="map-container"></div>
             </div>
         </div>
 
@@ -177,9 +207,12 @@
         </div>
 
         <div id="devConsole">
-            <div id="devConsoleHeader">
+            <div id="devConsoleHeader" class="draggable-header">
                 <span>Dev Console</span>
-                <button id="clearDevConsole">Pulisci</button>
+                <div class="header-buttons">
+                    <button id="toggleDevConsole" class="minimize-btn">−</button>
+                    <button id="clearDevConsole" class="clear-btn">Pulisci</button>
+                </div>
             </div>
             <div id="devConsoleContent"></div>
             <div id="devToolsMenu">
@@ -188,6 +221,18 @@
                 <button id="viewSessionBtn" class="dev-tool-btn">View Session</button>
                 <button id="clearDbBtn" class="dev-tool-btn">Clear Database</button>
                 <button id="exportDbBtn" class="dev-tool-btn">Export Data</button>
+            </div>
+        </div>
+
+        <div id="mapSearchBar" style="display: none;">
+            <div id="searchBarHeader" class="draggable-header">
+                <span>Cerca Località</span>
+                <button id="toggleSearchBar" class="minimize-btn">−</button>
+            </div>
+            <div id="searchBarContent">
+                <input type="text" id="mapSearchInput" placeholder="Cerca un luogo..." />
+                <button id="mapSearchBtn">Cerca</button>
+                <div id="searchResults"></div>
             </div>
         </div>
 
