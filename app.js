@@ -30,8 +30,6 @@ document.getElementById('clearDevConsole')?.addEventListener('click', () => {
 devLog('App inizializzata', 'success');
 devLog('Connessione a Supabase stabilita', 'success');
 
-loadFlyers();
-
 const savedUser = localStorage.getItem('currentUser');
 if (savedUser) {
     try {
@@ -41,7 +39,12 @@ if (savedUser) {
     } catch (error) {
         devLog('Errore ripristino sessione', 'error');
         localStorage.removeItem('currentUser');
+        currentUser = null;
     }
+}
+
+if (!currentUser) {
+    loadFlyers();
 }
 
 const loginBtn = document.getElementById('loginBtn');
