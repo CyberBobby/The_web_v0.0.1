@@ -90,3 +90,36 @@ body {
 .modal-content button:hover {
     background-color: #45a049;
 }
+
+#userNavbar, #adminNavbar {
+    background-color: #333;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#userNavbar h2, #adminNavbar h2 {
+    color: white;
+}
+
+#userLogoutBtn, #adminLogoutBtn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+#userLogoutBtn:hover, #adminLogoutBtn:hover {
+    background-color: #da190b;
+}
+
+.content {
+    padding: 2rem;
+}
+
+.content h1 {
+    margin-bottom: 1rem;
+}
