@@ -38,13 +38,6 @@
                     <form id="registerForm">
                         <input type="text" id="registerNickname" placeholder="Nickname" required>
                         <input type="password" id="registerPassword" placeholder="Password" required>
-                        <label for="registerRole">Ruolo:</label>
-                        <select id="registerRole" required>
-                            <option value="user">User (Utente base)</option>
-                            <option value="publisher">Publisher (Crea flyer)</option>
-                            <option value="developer">Developer (Gestione completa)</option>
-                            <option value="admin">Admin (Amministratore)</option>
-                        </select>
                         <button type="submit">Registrati</button>
                     </form>
                 </div>
@@ -189,6 +182,13 @@
                 <button id="clearDevConsole">Pulisci</button>
             </div>
             <div id="devConsoleContent"></div>
+            <div id="devToolsMenu">
+                <button id="showDbTablesBtn" class="dev-tool-btn">Mostra Tabelle DB</button>
+                <button id="testRlsBtn" class="dev-tool-btn">Test RLS Policies</button>
+                <button id="viewSessionBtn" class="dev-tool-btn">View Session</button>
+                <button id="clearDbBtn" class="dev-tool-btn">Clear Database</button>
+                <button id="exportDbBtn" class="dev-tool-btn">Export Data</button>
+            </div>
         </div>
 
         <script type="module" src="app.js"></script>

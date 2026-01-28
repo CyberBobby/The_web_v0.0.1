@@ -20,9 +20,7 @@ function devLog(message, type = 'info') {
     console.log(`[DEV] ${message}`);
 }
 
-if (DEV_MODE) {
-    document.getElementById('devConsole').style.display = 'block';
-}
+document.getElementById('devConsole').style.display = 'none';
 
 document.getElementById('clearDevConsole')?.addEventListener('click', () => {
     document.getElementById('devConsoleContent').innerHTML = '';
@@ -81,20 +79,17 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
     const nickname = document.getElementById('registerNickname').value;
     const password = document.getElementById('registerPassword').value;
-    const role = document.getElementById('registerRole').value;
 
-    devLog(`Tentativo di registrazione per: ${nickname} con ruolo: ${role}`, 'info');
+    devLog(`Tentativo di registrazione per: ${nickname}`, 'info');
     devLog(`Campo nickname: ${nickname ? 'compilato' : 'vuoto'}`, nickname ? 'success' : 'error');
     devLog(`Campo password: ${password ? 'compilato' : 'vuoto'}`, password ? 'success' : 'error');
-    devLog(`Ruolo selezionato: ${role}`, 'info');
 
     try {
         devLog('Invio richiesta di registrazione a Supabase...', 'info');
         const { data, error } = await supabase
             .rpc('register_user', {
                 p_nickname: nickname,
-                p_password: password,
-                p_role: role
+                p_password: password
             });
 
         if (error) throw error;
@@ -159,6 +154,12 @@ function showDashboard(role) {
     developerSection.style.display = 'none';
     publisherSection.style.display = 'none';
 
+    if (role === 'developer' && DEV_MODE) {
+        document.getElementById('devConsole').style.display = 'block';
+    } else {
+        document.getElementById('devConsole').style.display = 'none';
+    }
+
     if (role === 'admin') {
         devLog('Dashboard admin visualizzata', 'success');
         adminSection.style.display = 'block';
@@ -191,6 +192,7 @@ function logout() {
     adminSection.style.display = 'none';
     developerSection.style.display = 'none';
     publisherSection.style.display = 'none';
+    document.getElementById('devConsole').style.display = 'none';
     devLog('Ritorno alla schermata di autenticazione', 'success');
 }
 
@@ -739,5 +741,110 @@ document.getElementById('userManagementForm').addEventListener('submit', async (
     } catch (error) {
         devLog(`Errore aggiornamento: ${error.message}`, 'error');
         alert('Errore: ' + error.message);
+    }
+});
+
+document.getElementById('showDbTablesBtn')?.addEventListener('click', async () => {
+    devLog('=== STRUTTURA DATABASE ===', 'info');
+    try {
+        const tables = ['users', 'flyer', 'flyer_requests'];
+        for (const table of tables) {
+            const { data, error, count } = await supabase
+                .from(table)
+                .select('*', { count: 'exact', head: true });
+
+            if (error) throw error;
+            devLog(`Tabella: ${table} - Record: ${count || 0}`, 'success');
+        }
+    } catch (error) {
+        devLog(`Errore lettura DB: ${error.message}`, 'error');
+    }
+});
+
+document.getElementById('testRlsBtn')?.addEventListener('click', async () => {
+    devLog('=== TEST RLS POLICIES ===', 'info');
+    try {
+        const { data: flyerData, error: flyerError } = await supabase.from('flyer').select('*').limit(1);
+        devLog(`Test SELECT flyer: ${flyerError ? 'FAIL - ' + flyerError.message : 'OK - ' + flyerData.length + ' record'}`, flyerError ? 'error' : 'success');
+
+        const { data: userData, error: userError } = await supabase.from('users').select('nickname').limit(1);
+        devLog(`Test SELECT users: ${userError ? 'FAIL - ' + userError.message : 'OK - ' + userData.length + ' record'}`, userError ? 'error' : 'success');
+
+        const { data: reqData, error: reqError } = await supabase.from('flyer_requests').select('*').limit(1);
+        devLog(`Test SELECT flyer_requests: ${reqError ? 'FAIL - ' + reqError.message : 'OK - ' + reqData.length + ' record'}`, reqError ? 'error' : 'success');
+    } catch (error) {
+        devLog(`Errore test RLS: ${error.message}`, 'error');
+    }
+});
+
+document.getElementById('viewSessionBtn')?.addEventListener('click', () => {
+    devLog('=== SESSIONE CORRENTE ===', 'info');
+    if (currentUser) {
+        devLog(`ID: ${currentUser.id}`, 'info');
+        devLog(`Nickname: ${currentUser.nickname}`, 'info');
+        devLog(`Ruolo: ${currentUser.role}`, 'info');
+        devLog(`Fidelty: ${currentUser.fidelty || 'N/A'}`, 'info');
+        devLog(`Creato: ${new Date(currentUser.created_at).toLocaleString('it-IT')}`, 'info');
+    } else {
+        devLog('Nessun utente loggato', 'error');
+    }
+});
+
+document.getElementById('clearDbBtn')?.addEventListener('click', async () => {
+    if (!confirm('ATTENZIONE: Vuoi eliminare TUTTI i flyer e le richieste? Questa azione è irreversibile!')) return;
+
+    devLog('Pulizia database in corso...', 'info');
+    try {
+        const { error: flyerError } = await supabase.from('flyer').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (flyerError) throw flyerError;
+        devLog('Tutti i flyer eliminati', 'success');
+
+        const { error: reqError } = await supabase.from('flyer_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (reqError) throw reqError;
+        devLog('Tutte le richieste eliminate', 'success');
+
+        alert('Database pulito!');
+        loadFlyers();
+        if (currentUser?.role === 'developer') {
+            loadFlyerRequests('developer');
+        }
+    } catch (error) {
+        devLog(`Errore pulizia DB: ${error.message}`, 'error');
+        alert('Errore durante la pulizia: ' + error.message);
+    }
+});
+
+document.getElementById('exportDbBtn')?.addEventListener('click', async () => {
+    devLog('Esportazione dati in corso...', 'info');
+    try {
+        const { data: users, error: usersError } = await supabase.from('users').select('nickname, role, fidelty, created_at');
+        const { data: flyers, error: flyersError } = await supabase.from('flyer').select('*');
+        const { data: requests, error: requestsError } = await supabase.from('flyer_requests').select('*');
+
+        if (usersError || flyersError || requestsError) {
+            throw new Error('Errore durante l\'esportazione');
+        }
+
+        const exportData = {
+            exported_at: new Date().toISOString(),
+            users: users,
+            flyers: flyers,
+            requests: requests
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `db_export_${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        devLog(`Dati esportati: ${users.length} utenti, ${flyers.length} flyer, ${requests.length} richieste`, 'success');
+        alert('Dati esportati con successo!');
+    } catch (error) {
+        devLog(`Errore esportazione: ${error.message}`, 'error');
+        alert('Errore durante l\'esportazione: ' + error.message);
     }
 });
