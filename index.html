@@ -38,6 +38,13 @@
                     <form id="registerForm">
                         <input type="text" id="registerNickname" placeholder="Nickname" required>
                         <input type="password" id="registerPassword" placeholder="Password" required>
+                        <label for="registerRole">Ruolo:</label>
+                        <select id="registerRole" required>
+                            <option value="user">User (Utente base)</option>
+                            <option value="publisher">Publisher (Crea flyer)</option>
+                            <option value="developer">Developer (Gestione completa)</option>
+                            <option value="admin">Admin (Amministratore)</option>
+                        </select>
                         <button type="submit">Registrati</button>
                     </form>
                 </div>
@@ -47,7 +54,9 @@
         <div id="userSection" style="display: none;">
             <nav id="userNavbar">
                 <h2>Benvenuto Utente</h2>
-                <button id="userLogoutBtn">Logout</button>
+                <div class="nav-buttons">
+                    <button id="userLogoutBtn">Logout</button>
+                </div>
             </nav>
             <div class="content">
                 <h1>Dashboard Utente</h1>
@@ -63,7 +72,9 @@
         <div id="adminSection" style="display: none;">
             <nav id="adminNavbar">
                 <h2>Benvenuto Admin</h2>
-                <button id="adminLogoutBtn">Logout</button>
+                <div class="nav-buttons">
+                    <button id="adminLogoutBtn">Logout</button>
+                </div>
             </nav>
             <div class="content">
                 <h1>Dashboard Admin</h1>
@@ -85,7 +96,9 @@
         <div id="developerSection" style="display: none;">
             <nav id="developerNavbar">
                 <h2>Benvenuto Developer</h2>
-                <button id="developerLogoutBtn">Logout</button>
+                <div class="nav-buttons">
+                    <button id="developerLogoutBtn">Logout</button>
+                </div>
             </nav>
             <div class="content">
                 <h1>Dashboard Developer</h1>
@@ -112,7 +125,9 @@
         <div id="publisherSection" style="display: none;">
             <nav id="publisherNavbar">
                 <h2>Benvenuto Publisher</h2>
-                <button id="publisherLogoutBtn">Logout</button>
+                <div class="nav-buttons">
+                    <button id="publisherLogoutBtn">Logout</button>
+                </div>
             </nav>
             <div class="content">
                 <h1>Dashboard Publisher</h1>

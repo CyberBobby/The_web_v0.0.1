@@ -81,17 +81,20 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
     const nickname = document.getElementById('registerNickname').value;
     const password = document.getElementById('registerPassword').value;
+    const role = document.getElementById('registerRole').value;
 
-    devLog(`Tentativo di registrazione per: ${nickname}`, 'info');
+    devLog(`Tentativo di registrazione per: ${nickname} con ruolo: ${role}`, 'info');
     devLog(`Campo nickname: ${nickname ? 'compilato' : 'vuoto'}`, nickname ? 'success' : 'error');
     devLog(`Campo password: ${password ? 'compilato' : 'vuoto'}`, password ? 'success' : 'error');
+    devLog(`Ruolo selezionato: ${role}`, 'info');
 
     try {
         devLog('Invio richiesta di registrazione a Supabase...', 'info');
         const { data, error } = await supabase
             .rpc('register_user', {
                 p_nickname: nickname,
-                p_password: password
+                p_password: password,
+                p_role: role
             });
 
         if (error) throw error;

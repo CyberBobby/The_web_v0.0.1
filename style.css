@@ -91,6 +91,13 @@ body {
     background-color: #45a049;
 }
 
+.modal-content label {
+    font-weight: bold;
+    margin-top: 0.5rem;
+    display: block;
+    color: #333;
+}
+
 #userNavbar, #adminNavbar, #developerNavbar, #publisherNavbar {
     background-color: #333;
     padding: 1rem;
@@ -101,6 +108,12 @@ body {
 
 #userNavbar h2, #adminNavbar h2, #developerNavbar h2, #publisherNavbar h2 {
     color: white;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
 }
 
 #userLogoutBtn, #adminLogoutBtn, #developerLogoutBtn, #publisherLogoutBtn {
