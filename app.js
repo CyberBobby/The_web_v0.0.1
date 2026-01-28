@@ -32,6 +32,8 @@ document.getElementById('clearDevConsole')?.addEventListener('click', () => {
 devLog('App inizializzata', 'success');
 devLog('Connessione a Supabase stabilita', 'success');
 
+loadFlyers();
+
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
 const loginModal = document.getElementById('loginModal');
@@ -160,4 +162,64 @@ function logout() {
     userSection.style.display = 'none';
     adminSection.style.display = 'none';
     devLog('Ritorno alla schermata di autenticazione', 'success');
+}
+
+async function loadFlyers() {
+    devLog('Caricamento flyer dal database...', 'info');
+
+    try {
+        const { data, error } = await supabase
+            .from('flyer')
+            .select('*')
+            .order('data', { ascending: false });
+
+        if (error) throw error;
+
+        devLog(`${data.length} flyer caricati dal database`, 'success');
+
+        renderFlyers(data, 'flyerContainer');
+        renderFlyers(data, 'flyerContainerUser');
+        renderFlyers(data, 'flyerContainerAdmin');
+    } catch (error) {
+        devLog(`Errore durante il caricamento dei flyer: ${error.message}`, 'error');
+        console.error('Errore caricamento flyer:', error);
+    }
+}
+
+function renderFlyers(flyers, containerId) {
+    const container = document.getElementById(containerId);
+
+    if (!flyers || flyers.length === 0) {
+        devLog(`Nessun flyer da visualizzare in ${containerId}`, 'info');
+        container.innerHTML = '<div class="no-flyer-message">Nessun evento disponibile al momento</div>';
+        return;
+    }
+
+    const table = document.createElement('table');
+    table.className = 'flyer-table';
+
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Data</th>
+                <th>Crew</th>
+                <th>Descrizione</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${flyers.map(flyer => `
+                <tr>
+                    <td>${flyer.nome}</td>
+                    <td>${new Date(flyer.data).toLocaleDateString('it-IT')}</td>
+                    <td>${flyer.crew}</td>
+                    <td>${flyer.descrizione}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+
+    container.innerHTML = '';
+    container.appendChild(table);
+    devLog(`${flyers.length} flyer renderizzati in ${containerId}`, 'success');
 }
