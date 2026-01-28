@@ -1,45 +1,17 @@
 <!DOCTYPE html>
 <html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App con Login</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <nav id="navbar">
-        <button id="loginBtn">Login</button>
-        <button id="registerBtn">Register</button>
-    </nav>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>App con Login</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
 
-    <div id="authContainer" class="hidden">
-        <div id="loginForm" class="form-container hidden">
-            <h2>Login</h2>
-            <input type="email" id="loginEmail" placeholder="Email">
-            <input type="password" id="loginPassword" placeholder="Password">
-            <button id="loginSubmit">Accedi</button>
-            <button id="closeLogin">Chiudi</button>
-        </div>
+    <body>
+        <nav id="navbar">
+            <button id="loginBtn">Login</button>
+            <button id="registerBtn">Register</button>
+        </nav>
+    </body>
 
-        <div id="registerForm" class="form-container hidden">
-            <h2>Register</h2>
-            <input type="email" id="registerEmail" placeholder="Email">
-            <input type="password" id="registerPassword" placeholder="Password">
-            <button id="registerSubmit">Registrati</button>
-            <button id="closeRegister">Chiudi</button>
-        </div>
-    </div>
-
-    <div id="mainContent" class="hidden">
-        <h1>Benvenuto!</h1>
-        <div id="userInfo"></div>
-        <div id="adminPanel" class="hidden">
-            <h2>Pannello Admin</h2>
-            <p>Questa sezione è visibile solo agli amministratori</p>
-        </div>
-        <button id="logoutBtn">Logout</button>
-    </div>
-
-    <script type="module" src="/functions/main.js"></script>
-</body>
 </html>
