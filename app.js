@@ -367,20 +367,76 @@ async function loadFlyers() {
 
         devLog(`${data.length} flyer caricati dal database`, 'success');
 
-        allFlyers = data;
+        const filteredData = await filterFlyersByVisibility(data);
+
+        allFlyers = filteredData;
 
         populateCrewFilters();
 
-        renderFlyers(data, 'flyerContainer', false);
-        renderFlyers(data, 'flyerContainerUser', false);
-        renderFlyers(data, 'flyerContainerAdmin', true);
-        renderFlyers(data, 'flyerContainerDeveloper', true);
-        renderFlyers(data, 'flyerContainerPublisher', currentUser?.role === 'publisher');
+        renderFlyers(filteredData, 'flyerContainer', false);
+        renderFlyers(filteredData, 'flyerContainerUser', false);
+        renderFlyers(filteredData, 'flyerContainerAdmin', true);
+        renderFlyers(filteredData, 'flyerContainerDeveloper', true);
+        renderFlyers(filteredData, 'flyerContainerPublisher', currentUser?.role === 'publisher');
 
         reloadMapMarkers();
     } catch (error) {
         devLog(`Errore durante il caricamento dei flyer: ${error.message}`, 'error');
         console.error('Errore caricamento flyer:', error);
+    }
+}
+
+async function filterFlyersByVisibility(flyers) {
+    if (!currentUser) {
+        return flyers.filter(f => f.visibility_type === 'all');
+    }
+
+    if (currentUser.role === 'admin' || currentUser.role === 'developer') {
+        return flyers;
+    }
+
+    try {
+        const { data: devList } = await supabase
+            .from('developer_list')
+            .select('user_id')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+
+        const isInDevList = !!devList;
+
+        let publisherLists = [];
+        if (currentUser.role === 'publisher') {
+            const { data: pubLists } = await supabase
+                .from('publisher_lists')
+                .select('publisher_id')
+                .eq('allowed_user_id', currentUser.id);
+
+            publisherLists = pubLists ? pubLists.map(p => p.publisher_id) : [];
+        } else {
+            const { data: pubLists } = await supabase
+                .from('publisher_lists')
+                .select('publisher_id')
+                .eq('allowed_user_id', currentUser.id);
+
+            publisherLists = pubLists ? pubLists.map(p => p.publisher_id) : [];
+        }
+
+        return flyers.filter(f => {
+            if (f.visibility_type === 'all') return true;
+
+            if (f.visibility_type === 'developer_list') {
+                return isInDevList;
+            }
+
+            if (f.visibility_type === 'publisher_list') {
+                return publisherLists.includes(f.created_by_id);
+            }
+
+            return false;
+        });
+    } catch (error) {
+        devLog(`Errore filtraggio visibilità: ${error.message}`, 'error');
+        return flyers.filter(f => f.visibility_type === 'all');
     }
 }
 
@@ -468,6 +524,10 @@ function renderFlyers(flyers, containerId, showActions) {
                     ? `<td><img src="${flyer.image_url}" alt="${flyer.nome}" style="width: 100px; height: 75px; object-fit: cover; border-radius: 4px; display: block;"></td>`
                     : `<td><div style="width: 100px; height: 75px; background: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 12px;">No img</div></td>`;
 
+                const locationDisplay = flyer.show_location !== false && flyer.address
+                    ? flyer.address.substring(0, 50) + (flyer.address.length > 50 ? '...' : '')
+                    : (flyer.show_location === false ? 'Privata' : '—');
+
                 return `
                     <tr data-flyer-id="${flyer.id}" class="flyer-row">
                         ${imageCell}
@@ -475,7 +535,7 @@ function renderFlyers(flyers, containerId, showActions) {
                         <td>${new Date(flyer.data).toLocaleDateString('it-IT')}</td>
                         <td>${flyer.crew}</td>
                         <td>${flyer.descrizione}</td>
-                        <td>${flyer.address ? flyer.address.substring(0, 50) + (flyer.address.length > 50 ? '...' : '') : '—'}</td>
+                        <td>${locationDisplay}</td>
                         <td>${flyer.user_nickname}</td>
                         ${actionsCell}
                     </tr>
@@ -519,6 +579,18 @@ function openFlyerModal(flyerId = null) {
         clearImagePreview();
     }
 
+    const visibilitySelect = document.getElementById('flyerVisibilityType');
+    const publisherListOption = visibilitySelect.querySelector('option[value="publisher_list"]');
+
+    if (currentUser?.role === 'publisher') {
+        if (publisherListOption) publisherListOption.style.display = 'block';
+    } else {
+        if (publisherListOption) publisherListOption.style.display = 'none';
+        if (visibilitySelect.value === 'publisher_list') {
+            visibilitySelect.value = 'all';
+        }
+    }
+
     initLocationPicker();
     modal.style.display = 'block';
     devLog(`Modal flyer ${flyerId ? 'modifica' : 'creazione'} aperto`, 'info');
@@ -555,6 +627,9 @@ async function loadFlyerData(flyerId) {
             } else {
                 clearImagePreview();
             }
+
+            document.getElementById('flyerVisibilityType').value = data.visibility_type || 'all';
+            document.getElementById('flyerShowLocation').checked = data.show_location !== false;
         }
     } catch (error) {
         devLog(`Errore caricamento flyer: ${error.message}`, 'error');
@@ -586,6 +661,9 @@ document.getElementById('flyerForm').addEventListener('submit', async (e) => {
             }
         }
 
+        const visibilityType = document.getElementById('flyerVisibilityType').value;
+        const showLocation = document.getElementById('flyerShowLocation').checked;
+
         const flyerData = {
             nome,
             data,
@@ -595,7 +673,10 @@ document.getElementById('flyerForm').addEventListener('submit', async (e) => {
             latitude: latitude ? parseFloat(latitude) : null,
             longitude: longitude ? parseFloat(longitude) : null,
             address: address || null,
-            image_url: imageUrl || null
+            image_url: imageUrl || null,
+            visibility_type: visibilityType,
+            show_location: showLocation,
+            created_by_id: currentUser.id
         };
 
         if (currentUser.role === 'publisher' && currentUser.fidelty !== 'friendly') {
@@ -1533,6 +1614,19 @@ async function loadFlyersOnMap(map, role) {
             return;
         }
 
+        const filteredFlyers = await filterFlyersByVisibility(flyers);
+
+        const visibleFlyers = filteredFlyers.filter(f =>
+            f.latitude &&
+            f.longitude &&
+            f.show_location !== false
+        );
+
+        if (visibleFlyers.length === 0) {
+            devLog('Nessun flyer con posizione visibile da visualizzare sulla mappa', 'info');
+            return;
+        }
+
         const flyerIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
@@ -1542,29 +1636,30 @@ async function loadFlyersOnMap(map, role) {
             shadowSize: [41, 41]
         });
 
-        flyers.forEach(flyer => {
-            if (flyer.latitude && flyer.longitude) {
-                const marker = L.marker([flyer.latitude, flyer.longitude], { icon: flyerIcon })
-                    .addTo(map);
+        visibleFlyers.forEach(flyer => {
+            const marker = L.marker([flyer.latitude, flyer.longitude], { icon: flyerIcon })
+                .addTo(map);
 
-                marker.on('click', () => {
-                    openFlyerDetailModal(flyer.id);
-                });
+            marker.on('click', () => {
+                openFlyerDetailModal(flyer.id);
+            });
 
-                const popupContent = `
-                    <div style="font-family: Arial, sans-serif; cursor: pointer;">
-                        <h3 style="margin: 0 0 8px 0; color: #333;">${flyer.nome}</h3>
-                        <p style="margin: 4px 0;"><strong>Data:</strong> ${new Date(flyer.data).toLocaleDateString('it-IT')}</p>
-                        <p style="margin: 4px 0;"><strong>Crew:</strong> ${flyer.crew}</p>
-                        <p style="margin: 4px 0; font-size: 12px; color: #888;">Clicca per vedere i dettagli</p>
-                    </div>
-                `;
+            const addressInfo = flyer.address ? `<p style="margin: 4px 0;"><strong>Luogo:</strong> ${flyer.address}</p>` : '';
 
-                marker.bindPopup(popupContent);
-            }
+            const popupContent = `
+                <div style="font-family: Arial, sans-serif; cursor: pointer;">
+                    <h3 style="margin: 0 0 8px 0; color: #333;">${flyer.nome}</h3>
+                    <p style="margin: 4px 0;"><strong>Data:</strong> ${new Date(flyer.data).toLocaleDateString('it-IT')}</p>
+                    <p style="margin: 4px 0;"><strong>Crew:</strong> ${flyer.crew}</p>
+                    ${addressInfo}
+                    <p style="margin: 4px 0; font-size: 12px; color: #888;">Clicca per vedere i dettagli</p>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
         });
 
-        devLog(`${flyers.filter(f => f.latitude && f.longitude).length} flyer caricati sulla mappa`, 'success');
+        devLog(`${visibleFlyers.length} flyer caricati sulla mappa`, 'success');
     } catch (error) {
         devLog(`Errore caricamento flyer sulla mappa: ${error.message}`, 'error');
     }
@@ -1715,7 +1810,13 @@ function openFlyerDetailModal(flyerId) {
     });
     crewEl.textContent = flyer.crew;
     descrizioneEl.textContent = flyer.descrizione;
-    addressEl.textContent = flyer.address || '—';
+
+    if (flyer.show_location !== false) {
+        addressEl.textContent = flyer.address || '—';
+    } else {
+        addressEl.textContent = 'Posizione privata';
+    }
+
     userEl.textContent = flyer.user_nickname;
 
     modal.style.display = 'block';
@@ -1790,3 +1891,272 @@ setupFilters('User', 'flyerContainerUser');
 setupFilters('Admin', 'flyerContainerAdmin');
 setupFilters('Developer', 'flyerContainerDeveloper');
 setupFilters('Publisher', 'flyerContainerPublisher');
+
+async function loadDeveloperList() {
+    if (currentUser?.role !== 'developer' && currentUser?.role !== 'admin') return;
+
+    try {
+        const { data, error } = await supabase
+            .from('developer_list')
+            .select('*')
+            .order('user_nickname', { ascending: true });
+
+        if (error) throw error;
+
+        const container = document.getElementById('developerListContainer');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: #666;">Nessun utente nella lista.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(item => `
+            <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
+                <span>${item.user_nickname}</span>
+                <button onclick="removeFromDeveloperList('${item.id}')" class="delete-btn" style="padding: 5px 10px;">Rimuovi</button>
+            </div>
+        `).join('');
+
+        devLog(`Caricati ${data.length} utenti nella lista standard`, 'success');
+    } catch (error) {
+        devLog(`Errore caricamento lista developer: ${error.message}`, 'error');
+    }
+}
+
+async function removeFromDeveloperList(itemId) {
+    if (!confirm('Rimuovere questo utente dalla lista?')) return;
+
+    try {
+        const { error } = await supabase
+            .from('developer_list')
+            .delete()
+            .eq('id', itemId);
+
+        if (error) throw error;
+
+        devLog('Utente rimosso dalla lista standard', 'success');
+        loadDeveloperList();
+    } catch (error) {
+        devLog(`Errore rimozione: ${error.message}`, 'error');
+        alert('Errore durante la rimozione: ' + error.message);
+    }
+}
+
+async function searchUsersForDeveloperList(query) {
+    if (!query || query.length < 2) return [];
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, nickname')
+            .ilike('nickname', `%${query}%`)
+            .limit(10);
+
+        if (error) throw error;
+
+        const { data: existing } = await supabase
+            .from('developer_list')
+            .select('user_id');
+
+        const existingIds = existing ? existing.map(e => e.user_id) : [];
+
+        return (data || []).filter(u => !existingIds.includes(u.id));
+    } catch (error) {
+        devLog(`Errore ricerca utenti: ${error.message}`, 'error');
+        return [];
+    }
+}
+
+async function addToDeveloperList(userId, nickname) {
+    try {
+        const { error } = await supabase
+            .from('developer_list')
+            .insert({
+                user_id: userId,
+                user_nickname: nickname,
+                added_by: currentUser.id
+            });
+
+        if (error) throw error;
+
+        devLog(`${nickname} aggiunto alla lista standard`, 'success');
+        loadDeveloperList();
+        document.getElementById('developerListSearch').value = '';
+        document.getElementById('developerListSearchResults').style.display = 'none';
+    } catch (error) {
+        devLog(`Errore aggiunta utente: ${error.message}`, 'error');
+        alert('Errore durante l\'aggiunta: ' + error.message);
+    }
+}
+
+const developerListSearch = document.getElementById('developerListSearch');
+if (developerListSearch) {
+    developerListSearch.addEventListener('input', async (e) => {
+        const query = e.target.value;
+        const resultsContainer = document.getElementById('developerListSearchResults');
+
+        if (query.length < 2) {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+
+        const users = await searchUsersForDeveloperList(query);
+
+        if (users.length === 0) {
+            resultsContainer.innerHTML = '<p style="padding: 10px; color: #666;">Nessun utente trovato</p>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+
+        resultsContainer.innerHTML = users.map(u => `
+            <div onclick="addToDeveloperList('${u.id}', '${u.nickname}')" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; hover: background-color: #f5f5f5;">
+                ${u.nickname}
+            </div>
+        `).join('');
+        resultsContainer.style.display = 'block';
+    });
+}
+
+async function loadPublisherList() {
+    if (currentUser?.role !== 'publisher') return;
+
+    try {
+        const { data, error } = await supabase
+            .from('publisher_lists')
+            .select('*')
+            .eq('publisher_id', currentUser.id)
+            .order('allowed_user_nickname', { ascending: true });
+
+        if (error) throw error;
+
+        const container = document.getElementById('publisherListContainer');
+        if (!container) return;
+
+        let html = '<p style="margin-bottom: 10px; padding: 10px; background-color: #e8f5e9; border-radius: 4px; color: #2e7d32;">✓ Admin e Developer hanno sempre accesso</p>';
+
+        if (!data || data.length === 0) {
+            html += '<p style="color: #666;">Nessun altro utente nella tua lista.</p>';
+        } else {
+            html += data.map(item => `
+                <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
+                    <span>${item.allowed_user_nickname}</span>
+                    <button onclick="removeFromPublisherList('${item.id}')" class="delete-btn" style="padding: 5px 10px;">Rimuovi</button>
+                </div>
+            `).join('');
+        }
+
+        container.innerHTML = html;
+
+        devLog(`Caricati ${data.length} utenti nella tua lista`, 'success');
+    } catch (error) {
+        devLog(`Errore caricamento lista publisher: ${error.message}`, 'error');
+    }
+}
+
+async function removeFromPublisherList(itemId) {
+    if (!confirm('Rimuovere questo utente dalla tua lista?')) return;
+
+    try {
+        const { error } = await supabase
+            .from('publisher_lists')
+            .delete()
+            .eq('id', itemId);
+
+        if (error) throw error;
+
+        devLog('Utente rimosso dalla tua lista', 'success');
+        loadPublisherList();
+    } catch (error) {
+        devLog(`Errore rimozione: ${error.message}`, 'error');
+        alert('Errore durante la rimozione: ' + error.message);
+    }
+}
+
+async function searchUsersForPublisherList(query) {
+    if (!query || query.length < 2) return [];
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, nickname, role')
+            .ilike('nickname', `%${query}%`)
+            .limit(10);
+
+        if (error) throw error;
+
+        const { data: existing } = await supabase
+            .from('publisher_lists')
+            .select('allowed_user_id')
+            .eq('publisher_id', currentUser.id);
+
+        const existingIds = existing ? existing.map(e => e.allowed_user_id) : [];
+
+        return (data || []).filter(u =>
+            !existingIds.includes(u.id) &&
+            u.role !== 'admin' &&
+            u.role !== 'developer'
+        );
+    } catch (error) {
+        devLog(`Errore ricerca utenti: ${error.message}`, 'error');
+        return [];
+    }
+}
+
+async function addToPublisherList(userId, nickname) {
+    try {
+        const { error } = await supabase
+            .from('publisher_lists')
+            .insert({
+                publisher_id: currentUser.id,
+                allowed_user_id: userId,
+                allowed_user_nickname: nickname
+            });
+
+        if (error) throw error;
+
+        devLog(`${nickname} aggiunto alla tua lista`, 'success');
+        loadPublisherList();
+        document.getElementById('publisherListSearch').value = '';
+        document.getElementById('publisherListSearchResults').style.display = 'none';
+    } catch (error) {
+        devLog(`Errore aggiunta utente: ${error.message}`, 'error');
+        alert('Errore durante l\'aggiunta: ' + error.message);
+    }
+}
+
+const publisherListSearch = document.getElementById('publisherListSearch');
+if (publisherListSearch) {
+    publisherListSearch.addEventListener('input', async (e) => {
+        const query = e.target.value;
+        const resultsContainer = document.getElementById('publisherListSearchResults');
+
+        if (query.length < 2) {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+
+        const users = await searchUsersForPublisherList(query);
+
+        if (users.length === 0) {
+            resultsContainer.innerHTML = '<p style="padding: 10px; color: #666;">Nessun utente trovato</p>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+
+        resultsContainer.innerHTML = users.map(u => `
+            <div onclick="addToPublisherList('${u.id}', '${u.nickname}')" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; hover: background-color: #f5f5f5;">
+                ${u.nickname}
+            </div>
+        `).join('');
+        resultsContainer.style.display = 'block';
+    });
+}
+
+if (currentUser?.role === 'developer' || currentUser?.role === 'admin') {
+    loadDeveloperList();
+}
+
+if (currentUser?.role === 'publisher') {
+    loadPublisherList();
+}

@@ -228,6 +228,16 @@
                 </div>
 
                 <div class="flyer-section">
+                    <h2>Lista Standard Visibilità Flyer</h2>
+                    <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i flyer con visibilità "Lista Standard".</p>
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="developerListSearch" placeholder="Cerca utente da aggiungere..." style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;">
+                        <div id="developerListSearchResults" style="border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                    </div>
+                    <div id="developerListContainer"></div>
+                </div>
+
+                <div class="flyer-section">
                     <h2>Log Sessioni Utenti</h2>
                     <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
                         <button id="loadSessionLogsBtn" class="action-btn">Carica Log</button>
@@ -297,6 +307,16 @@
                     <h2>Tue Richieste</h2>
                     <div id="myRequestsContainer"></div>
                 </div>
+
+                <div class="flyer-section">
+                    <h2>La Tua Lista Visibilità Flyer</h2>
+                    <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i tuoi flyer privati. Admin e Developer sono sempre inclusi.</p>
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="publisherListSearch" placeholder="Cerca utente da aggiungere..." style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;">
+                        <div id="publisherListSearchResults" style="border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                    </div>
+                    <div id="publisherListContainer"></div>
+                </div>
             </div>
 
             <div id="publisherMapView" class="view-container" style="display: none;">
@@ -352,6 +372,24 @@
                                 <p style="margin: 10px 0; color: #28a745; font-size: 14px;">
                                     ✓ Posizione selezionata: <span id="selectedLocationText"></span>
                                 </p>
+                            </div>
+                        </div>
+
+                        <div class="visibility-section" style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Impostazioni Visibilità</label>
+
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 14px;">Chi può vedere questo flyer:</label>
+                                <select id="flyerVisibilityType" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                    <option value="all">Tutti (anche non registrati)</option>
+                                    <option value="developer_list">Solo Lista Standard</option>
+                                    <option value="publisher_list">Solo La Mia Lista</option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="flyerShowLocation" checked style="width: auto;">
+                                <label for="flyerShowLocation" style="margin: 0; font-size: 14px;">Mostra posizione pubblica (mappa e indirizzo)</label>
                             </div>
                         </div>
                     </div>
