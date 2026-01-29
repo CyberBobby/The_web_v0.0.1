@@ -45,7 +45,9 @@ body {
     padding: 2rem;
     border-radius: 8px;
     width: 90%;
-    max-width: 400px;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .close {
@@ -734,4 +736,95 @@ select {
     .map-container {
         height: calc(100vh - 240px);
     }
+}
+
+.location-section {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.location-input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.location-input-group input {
+    flex: 1;
+    margin: 0;
+}
+
+.icon-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s;
+}
+
+.icon-btn:hover {
+    background-color: #0b7dda;
+}
+
+.address-suggestions {
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.address-suggestions.show {
+    display: block;
+}
+
+.suggestion-item {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.map-picker-container {
+    margin-top: 1rem;
+}
+
+.confirm-btn {
+    width: 100%;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.confirm-btn:hover {
+    background-color: #218838;
+}
+
+.selected-location {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
 }

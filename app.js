@@ -1,4 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { initLocationPicker, clearLocationSelection, setLocationSelection } from './location-picker.js';
 
 const DEV_MODE = true;
 
@@ -102,12 +103,20 @@ closeBtns.forEach(btn => {
         const modalId = btn.getAttribute('data-modal');
         devLog(`Modal ${modalId} chiuso`, 'info');
         document.getElementById(modalId).style.display = 'none';
+
+        if (modalId === 'flyerModal') {
+            clearLocationSelection();
+        }
     });
 });
 
 window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
         e.target.style.display = 'none';
+
+        if (e.target.id === 'flyerModal') {
+            clearLocationSelection();
+        }
     }
 });
 
@@ -266,10 +275,26 @@ async function loadFlyers() {
         renderFlyers(data, 'flyerContainerAdmin', true);
         renderFlyers(data, 'flyerContainerDeveloper', true);
         renderFlyers(data, 'flyerContainerPublisher', currentUser?.role === 'publisher');
+
+        reloadMapMarkers();
     } catch (error) {
         devLog(`Errore durante il caricamento dei flyer: ${error.message}`, 'error');
         console.error('Errore caricamento flyer:', error);
     }
+}
+
+function reloadMapMarkers() {
+    Object.keys(maps).forEach(role => {
+        const map = maps[role];
+        if (map) {
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+            loadFlyersOnMap(map, role);
+        }
+    });
 }
 
 function renderFlyers(flyers, containerId, showActions) {
@@ -294,6 +319,7 @@ function renderFlyers(flyers, containerId, showActions) {
                 <th>Data</th>
                 <th>Crew</th>
                 <th>Descrizione</th>
+                <th>Posizione</th>
                 <th>Creato da</th>
                 ${actionsHeader}
             </tr>
@@ -321,6 +347,7 @@ function renderFlyers(flyers, containerId, showActions) {
                         <td>${new Date(flyer.data).toLocaleDateString('it-IT')}</td>
                         <td>${flyer.crew}</td>
                         <td>${flyer.descrizione}</td>
+                        <td>${flyer.address ? flyer.address.substring(0, 50) + (flyer.address.length > 50 ? '...' : '') : '—'}</td>
                         <td>${flyer.user_nickname}</td>
                         ${actionsCell}
                     </tr>
@@ -350,8 +377,10 @@ function openFlyerModal(flyerId = null) {
         title.textContent = 'Aggiungi Flyer';
         document.getElementById('flyerForm').reset();
         document.getElementById('flyerId').value = '';
+        clearLocationSelection();
     }
 
+    initLocationPicker();
     modal.style.display = 'block';
     devLog(`Modal flyer ${flyerId ? 'modifica' : 'creazione'} aperto`, 'info');
 }
@@ -371,6 +400,14 @@ async function loadFlyerData(flyerId) {
             document.getElementById('flyerData').value = data.data;
             document.getElementById('flyerCrew').value = data.crew;
             document.getElementById('flyerDescrizione').value = data.descrizione;
+
+            if (data.latitude && data.longitude) {
+                setLocationSelection(
+                    parseFloat(data.latitude),
+                    parseFloat(data.longitude),
+                    data.address || ''
+                );
+            }
         }
     } catch (error) {
         devLog(`Errore caricamento flyer: ${error.message}`, 'error');
@@ -385,13 +422,19 @@ document.getElementById('flyerForm').addEventListener('submit', async (e) => {
     const data = document.getElementById('flyerData').value;
     const crew = document.getElementById('flyerCrew').value;
     const descrizione = document.getElementById('flyerDescrizione').value;
+    const latitude = document.getElementById('flyerLatitude').value;
+    const longitude = document.getElementById('flyerLongitude').value;
+    const address = document.getElementById('flyerAddress').value;
 
     const flyerData = {
         nome,
         data,
         crew,
         descrizione,
-        user_nickname: currentUser.nickname
+        user_nickname: currentUser.nickname,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        address: address || null
     };
 
     try {
@@ -405,6 +448,7 @@ document.getElementById('flyerForm').addEventListener('submit', async (e) => {
 
         flyerModal.style.display = 'none';
         document.getElementById('flyerForm').reset();
+        clearLocationSelection();
     } catch (error) {
         devLog(`Errore: ${error.message}`, 'error');
         alert('Errore: ' + error.message);
@@ -463,6 +507,9 @@ async function createFlyerRequest(flyerData) {
         data: flyerData.data,
         crew: flyerData.crew,
         descrizione: flyerData.descrizione,
+        latitude: flyerData.latitude,
+        longitude: flyerData.longitude,
+        address: flyerData.address,
         status: 'pending'
     };
 
@@ -566,6 +613,7 @@ function renderRequests(requests, containerId) {
                 <th>Data</th>
                 <th>Crew</th>
                 <th>Descrizione</th>
+                <th>Posizione</th>
                 <th>Publisher</th>
                 <th>Azioni</th>
             </tr>
@@ -577,6 +625,7 @@ function renderRequests(requests, containerId) {
                     <td>${new Date(req.data).toLocaleDateString('it-IT')}</td>
                     <td>${req.crew}</td>
                     <td>${req.descrizione}</td>
+                    <td>${req.address ? req.address.substring(0, 50) + (req.address.length > 50 ? '...' : '') : '—'}</td>
                     <td>${req.publisher_nickname}</td>
                     <td>
                         <div class="flyer-actions">
@@ -610,7 +659,10 @@ window.approveRequest = async function(requestId) {
             data: request.data,
             crew: request.crew,
             descrizione: request.descrizione,
-            user_nickname: request.publisher_nickname
+            user_nickname: request.publisher_nickname,
+            latitude: request.latitude,
+            longitude: request.longitude,
+            address: request.address
         };
 
         const { error: insertError } = await supabase
@@ -720,6 +772,7 @@ function renderMyRequests(requests) {
                 <th>Nome</th>
                 <th>Data</th>
                 <th>Crew</th>
+                <th>Posizione</th>
                 <th>Stato</th>
                 <th>Revisionata da</th>
             </tr>
@@ -730,6 +783,7 @@ function renderMyRequests(requests) {
                     <td>${req.nome}</td>
                     <td>${new Date(req.data).toLocaleDateString('it-IT')}</td>
                     <td>${req.crew}</td>
+                    <td>${req.address ? req.address.substring(0, 50) + (req.address.length > 50 ? '...' : '') : '—'}</td>
                     <td><span class="request-status status-${req.status}">${req.status}</span></td>
                     <td>${req.reviewed_by || '-'}</td>
                 </tr>
@@ -1115,7 +1169,57 @@ function initMap(role, mapId) {
 
     maps[role] = map;
 
+    loadFlyersOnMap(map, role);
+
     devLog('Mappa inizializzata con successo', 'success');
+}
+
+async function loadFlyersOnMap(map, role) {
+    try {
+        const { data: flyers, error } = await supabase
+            .from('flyer')
+            .select('*')
+            .order('data', { ascending: false });
+
+        if (error) throw error;
+
+        if (!flyers || flyers.length === 0) {
+            devLog('Nessun flyer con posizione da visualizzare sulla mappa', 'info');
+            return;
+        }
+
+        const flyerIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        flyers.forEach(flyer => {
+            if (flyer.latitude && flyer.longitude) {
+                const marker = L.marker([flyer.latitude, flyer.longitude], { icon: flyerIcon })
+                    .addTo(map);
+
+                const popupContent = `
+                    <div style="font-family: Arial, sans-serif;">
+                        <h3 style="margin: 0 0 8px 0; color: #333;">${flyer.nome}</h3>
+                        <p style="margin: 4px 0;"><strong>Data:</strong> ${new Date(flyer.data).toLocaleDateString('it-IT')}</p>
+                        <p style="margin: 4px 0;"><strong>Crew:</strong> ${flyer.crew}</p>
+                        <p style="margin: 4px 0;"><strong>Descrizione:</strong> ${flyer.descrizione}</p>
+                        ${flyer.address ? `<p style="margin: 4px 0; font-size: 12px; color: #666;"><strong>Luogo:</strong> ${flyer.address}</p>` : ''}
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+            }
+        });
+
+        devLog(`${flyers.filter(f => f.latitude && f.longitude).length} flyer caricati sulla mappa`, 'success');
+    } catch (error) {
+        devLog(`Errore caricamento flyer sulla mappa: ${error.message}`, 'error');
+    }
 }
 
 setupViewSwitcher('user');

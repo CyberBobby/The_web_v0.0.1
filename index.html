@@ -185,6 +185,34 @@
                     <input type="date" id="flyerData" required>
                     <input type="text" id="flyerCrew" placeholder="Crew" required>
                     <textarea id="flyerDescrizione" placeholder="Descrizione" rows="4" required></textarea>
+
+                    <div class="location-section">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold;">Posizione Evento</label>
+
+                        <div class="location-input-group">
+                            <input type="text" id="flyerAddress" placeholder="Cerca indirizzo...">
+                            <button type="button" id="searchAddressBtn" class="icon-btn" title="Cerca indirizzo">🔍</button>
+                            <button type="button" id="selectOnMapBtn" class="icon-btn" title="Seleziona sulla mappa">📍</button>
+                        </div>
+
+                        <div id="addressSuggestions" class="address-suggestions"></div>
+
+                        <div id="mapPickerContainer" class="map-picker-container" style="display: none;">
+                            <p style="margin: 10px 0; color: #666; font-size: 14px;">Clicca sulla mappa per selezionare la posizione</p>
+                            <div id="mapPicker" style="height: 300px; border-radius: 8px;"></div>
+                            <button type="button" id="confirmLocationBtn" class="confirm-btn" style="margin-top: 10px;">Conferma Posizione</button>
+                        </div>
+
+                        <input type="hidden" id="flyerLatitude">
+                        <input type="hidden" id="flyerLongitude">
+
+                        <div id="selectedLocationDisplay" class="selected-location" style="display: none;">
+                            <p style="margin: 10px 0; color: #28a745; font-size: 14px;">
+                                ✓ Posizione selezionata: <span id="selectedLocationText"></span>
+                            </p>
+                        </div>
+                    </div>
+
                     <button type="submit">Salva</button>
                 </form>
             </div>
