@@ -142,6 +142,8 @@ document.getElementById('clearDevConsole')?.addEventListener('click', () => {
 
 let currentUser = null;
 let currentEditingFlyer = null;
+let allFlyers = [];
+let filteredFlyers = {};
 
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
@@ -365,6 +367,8 @@ async function loadFlyers() {
 
         devLog(`${data.length} flyer caricati dal database`, 'success');
 
+        allFlyers = data;
+
         renderFlyers(data, 'flyerContainer', false);
         renderFlyers(data, 'flyerContainerUser', false);
         renderFlyers(data, 'flyerContainerAdmin', true);
@@ -442,7 +446,7 @@ function renderFlyers(flyers, containerId, showActions) {
                     : `<td><div style="width: 100px; height: 75px; background: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 12px;">No img</div></td>`;
 
                 return `
-                    <tr>
+                    <tr data-flyer-id="${flyer.id}" class="flyer-row">
                         ${imageCell}
                         <td>${flyer.nome}</td>
                         <td>${new Date(flyer.data).toLocaleDateString('it-IT')}</td>
@@ -459,6 +463,16 @@ function renderFlyers(flyers, containerId, showActions) {
 
     container.innerHTML = '';
     container.appendChild(table);
+
+    table.querySelectorAll('.flyer-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+            if (!e.target.closest('button')) {
+                const flyerId = row.getAttribute('data-flyer-id');
+                openFlyerDetailModal(flyerId);
+            }
+        });
+    });
+
     devLog(`${flyers.length} flyer renderizzati in ${containerId}`, 'success');
 }
 
@@ -1510,13 +1524,16 @@ async function loadFlyersOnMap(map, role) {
                 const marker = L.marker([flyer.latitude, flyer.longitude], { icon: flyerIcon })
                     .addTo(map);
 
+                marker.on('click', () => {
+                    openFlyerDetailModal(flyer.id);
+                });
+
                 const popupContent = `
-                    <div style="font-family: Arial, sans-serif;">
+                    <div style="font-family: Arial, sans-serif; cursor: pointer;">
                         <h3 style="margin: 0 0 8px 0; color: #333;">${flyer.nome}</h3>
                         <p style="margin: 4px 0;"><strong>Data:</strong> ${new Date(flyer.data).toLocaleDateString('it-IT')}</p>
                         <p style="margin: 4px 0;"><strong>Crew:</strong> ${flyer.crew}</p>
-                        <p style="margin: 4px 0;"><strong>Descrizione:</strong> ${flyer.descrizione}</p>
-                        ${flyer.address ? `<p style="margin: 4px 0; font-size: 12px; color: #666;"><strong>Luogo:</strong> ${flyer.address}</p>` : ''}
+                        <p style="margin: 4px 0; font-size: 12px; color: #888;">Clicca per vedere i dettagli</p>
                     </div>
                 `;
 
@@ -1644,3 +1661,90 @@ document.getElementById('mapSearchInput')?.addEventListener('keypress', (e) => {
         document.getElementById('mapSearchBtn').click();
     }
 });
+
+function openFlyerDetailModal(flyerId) {
+    const flyer = allFlyers.find(f => f.id === flyerId);
+    if (!flyer) return;
+
+    const modal = document.getElementById('flyerDetailModal');
+    const imageEl = document.getElementById('flyerDetailImage');
+    const nomeEl = document.getElementById('flyerDetailNome');
+    const dataEl = document.getElementById('flyerDetailData');
+    const crewEl = document.getElementById('flyerDetailCrew');
+    const descrizioneEl = document.getElementById('flyerDetailDescrizione');
+    const addressEl = document.getElementById('flyerDetailAddress');
+    const userEl = document.getElementById('flyerDetailUser');
+
+    if (flyer.image_url) {
+        imageEl.style.backgroundImage = `url(${flyer.image_url})`;
+        imageEl.textContent = '';
+    } else {
+        imageEl.style.backgroundImage = '';
+        imageEl.textContent = 'Nessuna immagine';
+    }
+
+    nomeEl.textContent = flyer.nome;
+    dataEl.textContent = new Date(flyer.data).toLocaleDateString('it-IT', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    crewEl.textContent = flyer.crew;
+    descrizioneEl.textContent = flyer.descrizione;
+    addressEl.textContent = flyer.address || '—';
+    userEl.textContent = flyer.user_nickname;
+
+    modal.style.display = 'block';
+    devLog(`Aperto dettaglio flyer: ${flyer.nome}`, 'info');
+}
+
+function setupFilters(role, containerId) {
+    const applyBtn = document.getElementById(`applyFilters${role}`);
+    const resetBtn = document.getElementById(`resetFilters${role}`);
+    const dateInput = document.getElementById(`filterDate${role}`);
+    const crewInput = document.getElementById(`filterCrew${role}`);
+
+    if (!applyBtn || !resetBtn) return;
+
+    applyBtn.addEventListener('click', () => {
+        const dateFilter = dateInput?.value || '';
+        const crewFilter = crewInput?.value.toLowerCase() || '';
+
+        let filtered = [...allFlyers];
+
+        if (dateFilter) {
+            filtered = filtered.filter(f => f.data === dateFilter);
+        }
+
+        if (crewFilter) {
+            filtered = filtered.filter(f => f.crew.toLowerCase().includes(crewFilter));
+        }
+
+        filteredFlyers[role] = filtered;
+
+        const isAdmin = role === 'Admin' || role === 'Developer';
+        const isPublisher = role === 'Publisher' && currentUser?.role === 'publisher';
+        renderFlyers(filtered, containerId, isAdmin || isPublisher);
+
+        devLog(`Filtri applicati per ${role}: ${filtered.length} flyer trovati`, 'success');
+    });
+
+    resetBtn.addEventListener('click', () => {
+        if (dateInput) dateInput.value = '';
+        if (crewInput) crewInput.value = '';
+        filteredFlyers[role] = [];
+
+        const isAdmin = role === 'Admin' || role === 'Developer';
+        const isPublisher = role === 'Publisher' && currentUser?.role === 'publisher';
+        renderFlyers(allFlyers, containerId, isAdmin || isPublisher);
+
+        devLog(`Filtri resettati per ${role}`, 'info');
+    });
+}
+
+setupFilters('Auth', 'flyerContainer');
+setupFilters('User', 'flyerContainerUser');
+setupFilters('Admin', 'flyerContainerAdmin');
+setupFilters('Developer', 'flyerContainerDeveloper');
+setupFilters('Publisher', 'flyerContainerPublisher');

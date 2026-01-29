@@ -18,6 +18,12 @@
 
             <div class="flyer-section">
                 <h2>Eventi</h2>
+                <div class="filter-container">
+                    <input type="date" id="filterDateAuth" placeholder="Filtra per data">
+                    <input type="text" id="filterCrewAuth" placeholder="Filtra per crew">
+                    <button id="applyFiltersAuth" class="filter-btn">Filtra</button>
+                    <button id="resetFiltersAuth" class="filter-btn reset-btn">Reset</button>
+                </div>
                 <div id="flyerContainer"></div>
             </div>
 
@@ -74,6 +80,12 @@
             <div id="userFlyerView" class="view-container">
                 <div class="flyer-section">
                     <h2>Eventi</h2>
+                    <div class="filter-container">
+                        <input type="date" id="filterDateUser" placeholder="Filtra per data">
+                        <input type="text" id="filterCrewUser" placeholder="Filtra per crew">
+                        <button id="applyFiltersUser" class="filter-btn">Filtra</button>
+                        <button id="resetFiltersUser" class="filter-btn reset-btn">Reset</button>
+                    </div>
                     <div id="flyerContainerUser"></div>
                 </div>
             </div>
@@ -100,6 +112,12 @@
                 <div class="flyer-section">
                     <h2>Eventi</h2>
                     <button id="addFlyerBtnAdmin" class="action-btn">Aggiungi Flyer</button>
+                    <div class="filter-container">
+                        <input type="date" id="filterDateAdmin" placeholder="Filtra per data">
+                        <input type="text" id="filterCrewAdmin" placeholder="Filtra per crew">
+                        <button id="applyFiltersAdmin" class="filter-btn">Filtra</button>
+                        <button id="resetFiltersAdmin" class="filter-btn reset-btn">Reset</button>
+                    </div>
                     <div id="flyerContainerAdmin"></div>
                 </div>
 
@@ -162,6 +180,12 @@
                 <div class="flyer-section">
                     <h2>Eventi</h2>
                     <button id="addFlyerBtnDev" class="action-btn">Aggiungi Flyer</button>
+                    <div class="filter-container">
+                        <input type="date" id="filterDateDeveloper" placeholder="Filtra per data">
+                        <input type="text" id="filterCrewDeveloper" placeholder="Filtra per crew">
+                        <button id="applyFiltersDeveloper" class="filter-btn">Filtra</button>
+                        <button id="resetFiltersDeveloper" class="filter-btn reset-btn">Reset</button>
+                    </div>
                     <div id="flyerContainerDeveloper"></div>
                 </div>
 
@@ -225,6 +249,12 @@
                 <div class="flyer-section">
                     <h2>Eventi</h2>
                     <button id="addFlyerBtnPublisher" class="action-btn">Aggiungi Flyer</button>
+                    <div class="filter-container">
+                        <input type="date" id="filterDatePublisher" placeholder="Filtra per data">
+                        <input type="text" id="filterCrewPublisher" placeholder="Filtra per crew">
+                        <button id="applyFiltersPublisher" class="filter-btn">Filtra</button>
+                        <button id="resetFiltersPublisher" class="filter-btn reset-btn">Reset</button>
+                    </div>
                     <div id="flyerContainerPublisher"></div>
                 </div>
 
@@ -321,6 +351,38 @@
                         <button type="submit">Aggiorna</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <div id="flyerDetailModal" class="modal">
+            <div class="flyer-detail-content">
+                <span class="close" data-modal="flyerDetailModal">&times;</span>
+                <div class="flyer-detail-inner">
+                    <div id="flyerDetailImage" class="flyer-detail-image"></div>
+                    <div class="flyer-detail-info">
+                        <h1 id="flyerDetailNome"></h1>
+                        <div class="detail-row">
+                            <span class="detail-label">Data:</span>
+                            <span id="flyerDetailData" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Crew:</span>
+                            <span id="flyerDetailCrew" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Descrizione:</span>
+                            <span id="flyerDetailDescrizione" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Posizione:</span>
+                            <span id="flyerDetailAddress" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Creato da:</span>
+                            <span id="flyerDetailUser" class="detail-value"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
