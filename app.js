@@ -883,10 +883,11 @@ document.getElementById('userManagementForm').addEventListener('submit', async (
     devLog(`Aggiornamento fidelty per ${nickname} a ${newFidelty}...`, 'info');
 
     try {
-        const { error } = await supabase
-            .from('users')
-            .update({ fidelty: newFidelty })
-            .eq('nickname', nickname);
+        const { data, error } = await supabase
+            .rpc('update_user_fidelty', {
+                p_target_nickname: nickname,
+                p_new_fidelty: newFidelty
+            });
 
         if (error) throw error;
 
@@ -1072,6 +1073,137 @@ document.getElementById('exportDbBtn')?.addEventListener('click', async () => {
         alert('Errore durante l\'esportazione: ' + error.message);
     }
 });
+
+document.getElementById('loadSessionLogsBtn')?.addEventListener('click', async () => {
+    await loadSessionLogs();
+});
+
+async function loadSessionLogs() {
+    devLog('Caricamento session logs...', 'info');
+
+    const roleFilter = document.getElementById('logFilterRole')?.value || '';
+    const actionFilter = document.getElementById('logFilterAction')?.value || '';
+    const limit = parseInt(document.getElementById('logLimit')?.value) || 50;
+
+    try {
+        let query = supabase
+            .from('session_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(Math.min(limit, 500));
+
+        if (roleFilter) {
+            query = query.eq('user_role', roleFilter);
+        }
+
+        if (actionFilter) {
+            query = query.eq('action_type', actionFilter);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        renderSessionLogs(data || []);
+        devLog(`Log caricati: ${data?.length || 0} record`, 'success');
+    } catch (error) {
+        devLog(`Errore caricamento log: ${error.message}`, 'error');
+        alert('Errore durante il caricamento dei log: ' + error.message);
+    }
+}
+
+function renderSessionLogs(logs) {
+    const container = document.getElementById('sessionLogsContainer');
+    if (!container) return;
+
+    if (!logs || logs.length === 0) {
+        container.innerHTML = '<div class="no-flyer-message">Nessun log trovato con i filtri selezionati</div>';
+        return;
+    }
+
+    const actionLabels = {
+        'login': 'Login',
+        'logout': 'Logout',
+        'create_flyer': 'Creazione Flyer',
+        'edit_flyer': 'Modifica Flyer',
+        'delete_flyer': 'Eliminazione Flyer',
+        'approve_request': 'Approva Richiesta',
+        'reject_request': 'Rifiuta Richiesta',
+        'manage_user': 'Gestione Utente'
+    };
+
+    const table = document.createElement('table');
+    table.className = 'flyer-table';
+
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Data/Ora</th>
+                <th>Utente</th>
+                <th>Ruolo</th>
+                <th>Azione</th>
+                <th>Dettagli</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${logs.map(log => {
+                const timestamp = new Date(log.created_at).toLocaleString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                const actionLabel = actionLabels[log.action_type] || log.action_type;
+                const details = formatLogDetails(log.action_type, log.action_details);
+
+                return `
+                    <tr>
+                        <td data-label="Data/Ora">${timestamp}</td>
+                        <td data-label="Utente">${log.user_nickname}</td>
+                        <td data-label="Ruolo"><span class="request-status status-${log.user_role}">${log.user_role}</span></td>
+                        <td data-label="Azione">${actionLabel}</td>
+                        <td data-label="Dettagli">${details}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    `;
+
+    container.innerHTML = '';
+    container.appendChild(table);
+}
+
+function formatLogDetails(actionType, details) {
+    if (!details || Object.keys(details).length === 0) return '-';
+
+    switch (actionType) {
+        case 'login':
+        case 'logout':
+            return details.timestamp ? new Date(details.timestamp).toLocaleTimeString('it-IT') : '-';
+
+        case 'create_flyer':
+        case 'edit_flyer':
+            return details.flyer_name ? `Flyer: ${details.flyer_name}` : '-';
+
+        case 'delete_flyer':
+            return details.flyer_id ? `ID: ${details.flyer_id.substring(0, 8)}...` : '-';
+
+        case 'approve_request':
+        case 'reject_request':
+            return details.request_id ? `Richiesta: ${details.request_id.substring(0, 8)}...` : '-';
+
+        case 'manage_user':
+            if (details.managed_user && details.new_fidelty) {
+                return `${details.managed_user} → ${details.new_fidelty}`;
+            }
+            return JSON.stringify(details);
+
+        default:
+            return JSON.stringify(details);
+    }
+}
 
 let maps = {};
 let currentView = {};
