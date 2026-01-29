@@ -38,6 +38,101 @@ async function logSessionAction(actionType, actionDetails = {}) {
     }
 }
 
+async function resizeImage(file, maxWidth = 800, maxHeight = 600) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg', 0.85);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadImage(file) {
+    try {
+        devLog('Ridimensionamento immagine...', 'info');
+        const resizedBlob = await resizeImage(file);
+
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+        const filePath = fileName;
+
+        devLog(`Upload immagine: ${fileName}...`, 'info');
+
+        const { data, error } = await supabase.storage
+            .from('flyer-images')
+            .upload(filePath, resizedBlob, {
+                contentType: 'image/jpeg',
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabase.storage
+            .from('flyer-images')
+            .getPublicUrl(filePath);
+
+        devLog('Immagine caricata con successo!', 'success');
+        return publicUrlData.publicUrl;
+    } catch (error) {
+        devLog(`Errore upload immagine: ${error.message}`, 'error');
+        throw error;
+    }
+}
+
+async function deleteImage(imageUrl) {
+    if (!imageUrl) return;
+
+    try {
+        const urlParts = imageUrl.split('/flyer-images/');
+        if (urlParts.length < 2) return;
+
+        const filePath = urlParts[1];
+
+        devLog(`Eliminazione immagine: ${filePath}...`, 'info');
+
+        const { error } = await supabase.storage
+            .from('flyer-images')
+            .remove([filePath]);
+
+        if (error) throw error;
+
+        devLog('Immagine eliminata con successo!', 'success');
+    } catch (error) {
+        devLog(`Errore eliminazione immagine: ${error.message}`, 'error');
+    }
+}
+
 document.getElementById('devConsole').style.display = 'none';
 
 document.getElementById('clearDevConsole')?.addEventListener('click', () => {
@@ -315,6 +410,7 @@ function renderFlyers(flyers, containerId, showActions) {
     table.innerHTML = `
         <thead>
             <tr>
+                <th style="width: 120px;">Immagine</th>
                 <th>Nome</th>
                 <th>Data</th>
                 <th>Crew</th>
@@ -341,8 +437,13 @@ function renderFlyers(flyers, containerId, showActions) {
                     </td>
                 ` : '';
 
+                const imageCell = flyer.image_url
+                    ? `<td><img src="${flyer.image_url}" alt="${flyer.nome}" style="width: 100px; height: 75px; object-fit: cover; border-radius: 4px; display: block;"></td>`
+                    : `<td><div style="width: 100px; height: 75px; background: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 12px;">No img</div></td>`;
+
                 return `
                     <tr>
+                        ${imageCell}
                         <td>${flyer.nome}</td>
                         <td>${new Date(flyer.data).toLocaleDateString('it-IT')}</td>
                         <td>${flyer.crew}</td>
@@ -378,6 +479,7 @@ function openFlyerModal(flyerId = null) {
         document.getElementById('flyerForm').reset();
         document.getElementById('flyerId').value = '';
         clearLocationSelection();
+        clearImagePreview();
     }
 
     initLocationPicker();
@@ -408,6 +510,14 @@ async function loadFlyerData(flyerId) {
                     data.address || ''
                 );
             }
+
+            if (data.image_url) {
+                document.getElementById('flyerImageUrl').value = data.image_url;
+                document.getElementById('imagePreview').src = data.image_url;
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+            } else {
+                clearImagePreview();
+            }
         }
     } catch (error) {
         devLog(`Errore caricamento flyer: ${error.message}`, 'error');
@@ -425,19 +535,32 @@ document.getElementById('flyerForm').addEventListener('submit', async (e) => {
     const latitude = document.getElementById('flyerLatitude').value;
     const longitude = document.getElementById('flyerLongitude').value;
     const address = document.getElementById('flyerAddress').value;
-
-    const flyerData = {
-        nome,
-        data,
-        crew,
-        descrizione,
-        user_nickname: currentUser.nickname,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
-        address: address || null
-    };
+    const imageFile = document.getElementById('flyerImage').files[0];
+    const existingImageUrl = document.getElementById('flyerImageUrl').value;
 
     try {
+        let imageUrl = existingImageUrl;
+
+        if (imageFile) {
+            imageUrl = await uploadImage(imageFile);
+
+            if (existingImageUrl && existingImageUrl !== imageUrl) {
+                await deleteImage(existingImageUrl);
+            }
+        }
+
+        const flyerData = {
+            nome,
+            data,
+            crew,
+            descrizione,
+            user_nickname: currentUser.nickname,
+            latitude: latitude ? parseFloat(latitude) : null,
+            longitude: longitude ? parseFloat(longitude) : null,
+            address: address || null,
+            image_url: imageUrl || null
+        };
+
         if (currentUser.role === 'publisher' && currentUser.fidelty !== 'friendly') {
             await createFlyerRequest(flyerData);
         } else if (flyerId) {
@@ -449,11 +572,53 @@ document.getElementById('flyerForm').addEventListener('submit', async (e) => {
         flyerModal.style.display = 'none';
         document.getElementById('flyerForm').reset();
         clearLocationSelection();
+        clearImagePreview();
     } catch (error) {
         devLog(`Errore: ${error.message}`, 'error');
         alert('Errore: ' + error.message);
     }
 });
+
+document.getElementById('flyerImage')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+        alert('Formato non supportato. Usa JPEG, PNG o WebP.');
+        e.target.value = '';
+        return;
+    }
+
+    if (file.size > 5242880) {
+        alert('Il file è troppo grande. Dimensione massima: 5MB.');
+        e.target.value = '';
+        return;
+    }
+
+    try {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const preview = document.getElementById('imagePreview');
+            const container = document.getElementById('imagePreviewContainer');
+            preview.src = event.target.result;
+            container.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        devLog(`Errore preview immagine: ${error.message}`, 'error');
+    }
+});
+
+document.getElementById('removeImageBtn')?.addEventListener('click', () => {
+    clearImagePreview();
+});
+
+function clearImagePreview() {
+    document.getElementById('flyerImage').value = '';
+    document.getElementById('flyerImageUrl').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+}
 
 async function createFlyer(flyerData) {
     devLog('Creazione nuovo flyer...', 'info');
@@ -510,6 +675,7 @@ async function createFlyerRequest(flyerData) {
         latitude: flyerData.latitude,
         longitude: flyerData.longitude,
         address: flyerData.address,
+        image_url: flyerData.image_url || null,
         status: 'pending'
     };
 
@@ -543,9 +709,13 @@ window.deleteFlyer = async function(flyerId) {
     try {
         const { data: flyer } = await supabase
             .from('flyer')
-            .select('nome, data, crew')
+            .select('nome, data, crew, image_url')
             .eq('id', flyerId)
             .maybeSingle();
+
+        if (flyer?.image_url) {
+            await deleteImage(flyer.image_url);
+        }
 
         const { error } = await supabase
             .from('flyer')
@@ -662,7 +832,8 @@ window.approveRequest = async function(requestId) {
             user_nickname: request.publisher_nickname,
             latitude: request.latitude,
             longitude: request.longitude,
-            address: request.address
+            address: request.address,
+            image_url: request.image_url || null
         };
 
         const { error: insertError } = await supabase
