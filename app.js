@@ -20,6 +20,23 @@ function devLog(message, type = 'info') {
     console.log(`[DEV] ${message}`);
 }
 
+async function logSessionAction(actionType, actionDetails = {}) {
+    if (!currentUser || currentUser.role === 'user') return;
+
+    try {
+        await supabase
+            .from('session_logs')
+            .insert([{
+                user_nickname: currentUser.nickname,
+                user_role: currentUser.role,
+                action_type: actionType,
+                action_details: actionDetails
+            }]);
+    } catch (error) {
+        console.error('Errore logging:', error);
+    }
+}
+
 document.getElementById('devConsole').style.display = 'none';
 
 document.getElementById('clearDevConsole')?.addEventListener('click', () => {
@@ -150,6 +167,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             devLog(`Login riuscito! Ruolo utente: ${currentUser.role}`, 'success');
             devLog(`Dati utente ricevuti: ID=${currentUser.id}`, 'info');
             devLog('Sessione salvata in localStorage', 'success');
+
+            await logSessionAction('login', {
+                timestamp: new Date().toISOString()
+            });
+
             loginModal.style.display = 'none';
             document.getElementById('loginForm').reset();
             showDashboard(currentUser.role);
@@ -206,8 +228,13 @@ function showDashboard(role) {
     }
 }
 
-function logout() {
+async function logout() {
     devLog(`Logout eseguito per utente: ${currentUser?.nickname || 'sconosciuto'}`, 'info');
+
+    await logSessionAction('logout', {
+        timestamp: new Date().toISOString()
+    });
+
     currentUser = null;
     localStorage.removeItem('currentUser');
     devLog('Sessione rimossa da localStorage', 'info');
@@ -393,6 +420,12 @@ async function createFlyer(flyerData) {
 
     if (error) throw error;
 
+    await logSessionAction('create_flyer', {
+        flyer_name: flyerData.nome,
+        flyer_date: flyerData.data,
+        crew: flyerData.crew
+    });
+
     devLog('Flyer creato con successo!', 'success');
     alert('Flyer creato con successo!');
     loadFlyers();
@@ -407,6 +440,13 @@ async function updateFlyer(flyerId, flyerData) {
         .eq('id', flyerId);
 
     if (error) throw error;
+
+    await logSessionAction('edit_flyer', {
+        flyer_id: flyerId,
+        flyer_name: flyerData.nome,
+        flyer_date: flyerData.data,
+        crew: flyerData.crew
+    });
 
     devLog('Flyer aggiornato con successo!', 'success');
     alert('Flyer aggiornato con successo!');
@@ -432,6 +472,12 @@ async function createFlyerRequest(flyerData) {
 
     if (error) throw error;
 
+    await logSessionAction('create_flyer_request', {
+        flyer_name: flyerData.nome,
+        flyer_date: flyerData.data,
+        crew: flyerData.crew
+    });
+
     devLog('Richiesta flyer inviata con successo!', 'success');
     alert('Richiesta flyer inviata! Verrà revisionata da un admin o developer.');
     loadMyRequests();
@@ -447,12 +493,25 @@ window.deleteFlyer = async function(flyerId) {
     devLog(`Eliminazione flyer ${flyerId}...`, 'info');
 
     try {
+        const { data: flyer } = await supabase
+            .from('flyer')
+            .select('nome, data, crew')
+            .eq('id', flyerId)
+            .maybeSingle();
+
         const { error } = await supabase
             .from('flyer')
             .delete()
             .eq('id', flyerId);
 
         if (error) throw error;
+
+        await logSessionAction('delete_flyer', {
+            flyer_id: flyerId,
+            flyer_name: flyer?.nome,
+            flyer_date: flyer?.data,
+            crew: flyer?.crew
+        });
 
         devLog('Flyer eliminato con successo!', 'success');
         alert('Flyer eliminato!');
@@ -570,6 +629,12 @@ window.approveRequest = async function(requestId) {
 
         if (updateError) throw updateError;
 
+        await logSessionAction('approve_request', {
+            request_id: requestId,
+            flyer_name: request.nome,
+            publisher: request.publisher_nickname
+        });
+
         devLog('Richiesta approvata con successo!', 'success');
         alert('Richiesta approvata!');
         loadFlyers();
@@ -586,6 +651,12 @@ window.rejectRequest = async function(requestId) {
     devLog(`Rifiuto richiesta ${requestId}...`, 'info');
 
     try {
+        const { data: request } = await supabase
+            .from('flyer_requests')
+            .select('nome, publisher_nickname')
+            .eq('id', requestId)
+            .maybeSingle();
+
         const { error } = await supabase
             .from('flyer_requests')
             .update({
@@ -596,6 +667,12 @@ window.rejectRequest = async function(requestId) {
             .eq('id', requestId);
 
         if (error) throw error;
+
+        await logSessionAction('reject_request', {
+            request_id: requestId,
+            flyer_name: request?.nome,
+            publisher: request?.publisher_nickname
+        });
 
         devLog('Richiesta rifiutata', 'success');
         alert('Richiesta rifiutata');
@@ -758,6 +835,12 @@ document.getElementById('userManagementForm').addEventListener('submit', async (
 
         if (error) throw error;
 
+        await logSessionAction('manage_user', {
+            managed_user: nickname,
+            new_fidelty: newFidelty,
+            action: 'update_fidelty'
+        });
+
         devLog('Fidelty aggiornata con successo!', 'success');
         alert('Permessi aggiornati!');
         userManagementModal.style.display = 'none';
@@ -771,7 +854,7 @@ document.getElementById('userManagementForm').addEventListener('submit', async (
 document.getElementById('showDbTablesBtn')?.addEventListener('click', async () => {
     devLog('=== STRUTTURA DATABASE ===', 'info');
     try {
-        const tables = ['users', 'flyer', 'flyer_requests'];
+        const tables = ['users', 'flyer', 'flyer_requests', 'session_logs'];
         for (const table of tables) {
             const { data, error, count } = await supabase
                 .from(table)
@@ -796,6 +879,9 @@ document.getElementById('testRlsBtn')?.addEventListener('click', async () => {
 
         const { data: reqData, error: reqError } = await supabase.from('flyer_requests').select('*').limit(1);
         devLog(`Test SELECT flyer_requests: ${reqError ? 'FAIL - ' + reqError.message : 'OK - ' + reqData.length + ' record'}`, reqError ? 'error' : 'success');
+
+        const { data: logData, error: logError } = await supabase.from('session_logs').select('*').limit(1);
+        devLog(`Test SELECT session_logs: ${logError ? 'FAIL - ' + logError.message : 'OK - ' + logData.length + ' record'}`, logError ? 'error' : 'success');
     } catch (error) {
         devLog(`Errore test RLS: ${error.message}`, 'error');
     }
@@ -811,6 +897,41 @@ document.getElementById('viewSessionBtn')?.addEventListener('click', () => {
         devLog(`Creato: ${new Date(currentUser.created_at).toLocaleString('it-IT')}`, 'info');
     } else {
         devLog('Nessun utente loggato', 'error');
+    }
+});
+
+document.getElementById('viewSessionLogsBtn')?.addEventListener('click', async () => {
+    devLog('=== SESSION LOGS ===', 'info');
+    try {
+        const { data, error } = await supabase
+            .from('session_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            devLog('Nessun log trovato', 'info');
+            return;
+        }
+
+        devLog(`Trovati ${data.length} log (ultimi 50):`, 'success');
+        devLog('---', 'info');
+
+        data.forEach((log, index) => {
+            const timestamp = new Date(log.created_at).toLocaleString('it-IT');
+            const details = JSON.stringify(log.action_details);
+            devLog(`[${index + 1}] ${timestamp}`, 'info');
+            devLog(`    User: ${log.user_nickname} (${log.user_role})`, 'info');
+            devLog(`    Action: ${log.action_type}`, 'success');
+            devLog(`    Details: ${details}`, 'info');
+            devLog('---', 'info');
+        });
+
+        devLog('Fine logs', 'success');
+    } catch (error) {
+        devLog(`Errore lettura logs: ${error.message}`, 'error');
     }
 });
 
