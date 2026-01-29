@@ -1,5 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { initLocationPicker, clearLocationSelection, setLocationSelection } from './location-picker.js';
+import { initNavigation } from './navigation.js';
 
 const DEV_MODE = true;
 
@@ -152,10 +153,6 @@ const registerModal = document.getElementById('registerModal');
 const closeBtns = document.querySelectorAll('.close');
 
 const authSection = document.getElementById('authSection');
-const userSection = document.getElementById('userSection');
-const adminSection = document.getElementById('adminSection');
-const developerSection = document.getElementById('developerSection');
-const publisherSection = document.getElementById('publisherSection');
 
 const flyerModal = document.getElementById('flyerModal');
 const userManagementModal = document.getElementById('userManagementModal');
@@ -291,18 +288,56 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-document.getElementById('userLogoutBtn').addEventListener('click', logout);
-document.getElementById('adminLogoutBtn').addEventListener('click', logout);
-document.getElementById('developerLogoutBtn').addEventListener('click', logout);
-document.getElementById('publisherLogoutBtn').addEventListener('click', logout);
+const globalLogoutBtn = document.getElementById('globalLogoutBtn');
+if (globalLogoutBtn) {
+    globalLogoutBtn.addEventListener('click', logout);
+}
+
+document.addEventListener('flyersPageActivated', () => {
+    loadFlyers();
+});
+
+document.addEventListener('publisherPanelActivated', () => {
+    if (currentUser?.role === 'publisher') {
+        loadMyRequests();
+        loadPublisherList();
+        loadUsersForPublisherDropdown();
+    }
+});
+
+document.addEventListener('adminPanelActivated', () => {
+    if (currentUser?.role === 'admin') {
+        loadFlyerRequests('admin');
+        loadPublishers();
+    }
+});
+
+document.addEventListener('developerPanelActivated', () => {
+    if (currentUser?.role === 'developer') {
+        loadFlyerRequests('developer');
+        loadPublishers();
+        loadDeveloperList();
+        loadUsersForDeveloperDropdown();
+    }
+});
+
+document.addEventListener('mapViewActivated', () => {
+    if (!maps['global']) {
+        initMap('global', 'globalMap');
+    } else {
+        maps['global'].invalidateSize();
+    }
+
+    const searchBar = document.getElementById('mapSearchBar');
+    searchBar.style.display = 'block';
+    const mapView = document.getElementById('mapView');
+    if (mapView) {
+        mapView.appendChild(searchBar);
+    }
+});
 
 function showDashboard(role) {
     devLog(`Mostrando dashboard per ruolo: ${role}`, 'info');
-    authSection.style.display = 'none';
-    userSection.style.display = 'none';
-    adminSection.style.display = 'none';
-    developerSection.style.display = 'none';
-    publisherSection.style.display = 'none';
 
     if (role === 'developer' && DEV_MODE) {
         document.getElementById('devConsole').style.display = 'block';
@@ -310,28 +345,19 @@ function showDashboard(role) {
         document.getElementById('devConsole').style.display = 'none';
     }
 
+    initNavigation(currentUser);
+
+    loadFlyers();
+
     if (role === 'admin') {
         devLog('Dashboard admin visualizzata', 'success');
-        adminSection.style.display = 'block';
-        loadFlyers();
-        loadFlyerRequests('admin');
-        loadPublishers();
     } else if (role === 'developer') {
         devLog('Dashboard developer visualizzata', 'success');
-        developerSection.style.display = 'block';
-        loadFlyers();
-        loadFlyerRequests('developer');
-        loadPublishers();
     } else if (role === 'publisher') {
         devLog('Dashboard publisher visualizzata', 'success');
-        publisherSection.style.display = 'block';
-        loadFlyers();
-        loadMyRequests();
         displayFideltyStatus();
     } else {
         devLog('Dashboard utente visualizzata', 'success');
-        userSection.style.display = 'block';
-        loadFlyers();
     }
 }
 
@@ -345,12 +371,8 @@ async function logout() {
     currentUser = null;
     localStorage.removeItem('currentUser');
     devLog('Sessione rimossa da localStorage', 'info');
-    authSection.style.display = 'block';
-    userSection.style.display = 'none';
-    adminSection.style.display = 'none';
-    developerSection.style.display = 'none';
-    publisherSection.style.display = 'none';
     document.getElementById('devConsole').style.display = 'none';
+    initNavigation(null);
     devLog('Ritorno alla schermata di autenticazione', 'success');
 }
 
@@ -374,10 +396,7 @@ async function loadFlyers() {
         populateCrewFilters();
 
         renderFlyers(filteredData, 'flyerContainer', false);
-        renderFlyers(filteredData, 'flyerContainerUser', false);
-        renderFlyers(filteredData, 'flyerContainerAdmin', true);
-        renderFlyers(filteredData, 'flyerContainerDeveloper', true);
-        renderFlyers(filteredData, 'flyerContainerPublisher', currentUser?.role === 'publisher');
+        renderFlyers(filteredData, 'flyerContainerGlobal', currentUser?.role === 'admin' || currentUser?.role === 'developer' || currentUser?.role === 'publisher');
 
         reloadMapMarkers();
     } catch (error) {
@@ -551,9 +570,7 @@ function renderFlyers(flyers, containerId, showActions) {
     devLog(`${flyers.length} flyer renderizzati in ${containerId}`, 'success');
 }
 
-document.getElementById('addFlyerBtnAdmin')?.addEventListener('click', () => openFlyerModal());
-document.getElementById('addFlyerBtnDev')?.addEventListener('click', () => openFlyerModal());
-document.getElementById('addFlyerBtnPublisher')?.addEventListener('click', () => openFlyerModal());
+document.getElementById('addFlyerBtnGlobal')?.addEventListener('click', () => openFlyerModal());
 
 function openFlyerModal(flyerId = null) {
     currentEditingFlyer = flyerId;

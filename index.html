@@ -71,262 +71,189 @@
             </div>
         </div>
 
-        <div id="userSection" style="display: none;">
-            <nav id="userNavbar">
-                <h2>Benvenuto Utente</h2>
-                <div class="nav-buttons">
-                    <button id="userViewSwitchBtn" class="view-switch-btn">Mappa</button>
-                    <button id="userLogoutBtn">Logout</button>
+        <div id="mainApp" style="display: none;">
+            <nav id="topNav">
+                <h1>Flyer Manager</h1>
+                <div class="user-info">
+                    <span id="currentUserDisplay"></span>
+                    <button id="globalLogoutBtn" class="logout-btn">Logout</button>
                 </div>
             </nav>
-            <div class="content">
-                <h1>Dashboard Utente</h1>
-                <p>Questa è la tua area personale.</p>
-            </div>
 
-            <div id="userFlyerView" class="view-container">
-                <div class="flyer-section">
-                    <h2>Eventi</h2>
-                    <div class="filter-container">
-                        <select id="filterTypeDateUser" class="filter-select">
-                            <option value="exact">Data esatta</option>
-                            <option value="from">Da questa data</option>
-                            <option value="until">Entro questa data</option>
-                        </select>
-                        <input type="date" id="filterDateUser">
-                        <select id="filterCrewUser" class="filter-select">
-                            <option value="">Tutte le crew</option>
-                        </select>
-                        <button id="applyFiltersUser" class="filter-btn">Filtra</button>
-                        <button id="resetFiltersUser" class="filter-btn reset-btn">Reset</button>
+            <div id="appContainer">
+                <aside id="sidebar">
+                    <button class="nav-btn active" data-page="home">🏠 Home</button>
+                    <button class="nav-btn" data-page="flyers">🗓️ Flyer & Mappa</button>
+                    <button class="nav-btn publisher-only" data-page="publisher-panel" style="display: none;">📤 Publisher Panel</button>
+                    <button class="nav-btn admin-only" data-page="admin-panel" style="display: none;">⚙️ Admin Panel</button>
+                    <button class="nav-btn developer-only" data-page="developer-panel" style="display: none;">🔧 Developer Panel</button>
+                </aside>
+
+                <main id="mainContent">
+                    <div id="homePage" class="page active">
+                        <h2>Benvenuto</h2>
+                        <div class="welcome-card">
+                            <h3>Profilo Utente</h3>
+                            <p><strong>Nickname:</strong> <span id="homeNickname"></span></p>
+                            <p><strong>Ruolo:</strong> <span id="homeRole"></span></p>
+                            <p id="homeFidelty" style="display: none;"><strong>Fidelty:</strong> <span id="homeFideltyValue"></span></p>
+                        </div>
+                        <div class="welcome-info">
+                            <h3>Cosa puoi fare</h3>
+                            <div id="homeCapabilities"></div>
+                        </div>
                     </div>
-                    <div id="flyerContainerUser"></div>
-                </div>
-            </div>
 
-            <div id="userMapView" class="view-container" style="display: none;">
-                <div id="userMap" class="map-container"></div>
-            </div>
-        </div>
+                    <div id="flyersPage" class="page">
+                        <div class="page-header">
+                            <h2>Eventi</h2>
+                            <div class="view-toggle">
+                                <button id="showFlyerListBtn" class="toggle-btn active">Lista</button>
+                                <button id="showMapBtn" class="toggle-btn">Mappa</button>
+                            </div>
+                        </div>
 
-        <div id="adminSection" style="display: none;">
-            <nav id="adminNavbar">
-                <h2>Benvenuto Admin</h2>
-                <div class="nav-buttons">
-                    <button id="adminViewSwitchBtn" class="view-switch-btn">Mappa</button>
-                    <button id="adminLogoutBtn">Logout</button>
-                </div>
-            </nav>
-            <div class="content">
-                <h1>Dashboard Admin</h1>
-                <p>Gestisci gli utenti e le impostazioni del sistema.</p>
-            </div>
+                        <div id="flyerListView">
+                            <button id="addFlyerBtnGlobal" class="action-btn" style="display: none;">Aggiungi Flyer</button>
+                            <div class="filter-container">
+                                <select id="filterTypeDate" class="filter-select">
+                                    <option value="exact">Data esatta</option>
+                                    <option value="from">Da questa data</option>
+                                    <option value="until">Entro questa data</option>
+                                </select>
+                                <input type="date" id="filterDate">
+                                <select id="filterCrew" class="filter-select">
+                                    <option value="">Tutte le crew</option>
+                                </select>
+                                <button id="applyFilters" class="filter-btn">Filtra</button>
+                                <button id="resetFilters" class="filter-btn reset-btn">Reset</button>
+                            </div>
+                            <div id="flyerContainerGlobal"></div>
+                        </div>
 
-            <div id="adminFlyerView" class="view-container">
-                <div class="flyer-section">
-                    <h2>Eventi</h2>
-                    <button id="addFlyerBtnAdmin" class="action-btn">Aggiungi Flyer</button>
-                    <div class="filter-container">
-                        <select id="filterTypeDateAdmin" class="filter-select">
-                            <option value="exact">Data esatta</option>
-                            <option value="from">Da questa data</option>
-                            <option value="until">Entro questa data</option>
-                        </select>
-                        <input type="date" id="filterDateAdmin">
-                        <select id="filterCrewAdmin" class="filter-select">
-                            <option value="">Tutte le crew</option>
-                        </select>
-                        <button id="applyFiltersAdmin" class="filter-btn">Filtra</button>
-                        <button id="resetFiltersAdmin" class="filter-btn reset-btn">Reset</button>
+                        <div id="mapView" style="display: none;">
+                            <div id="globalMap" class="map-container"></div>
+                        </div>
                     </div>
-                    <div id="flyerContainerAdmin"></div>
-                </div>
 
-                <div class="flyer-section">
-                    <h2>Richieste Flyer in Attesa</h2>
-                    <div id="requestsContainerAdmin"></div>
-                </div>
+                    <div id="publisherPanelPage" class="page">
+                        <h2>Publisher Panel</h2>
+                        <p>Gestisci i tuoi contenuti e richieste</p>
 
-                <div class="flyer-section">
-                    <h2>Gestione Utenti Publisher</h2>
-                    <div id="publishersContainerAdmin"></div>
-                </div>
+                        <div class="flyer-section">
+                            <h3>Tue Richieste</h3>
+                            <div id="myRequestsContainer"></div>
+                        </div>
 
-                <div class="flyer-section">
-                    <h2>Log Sessioni Utenti</h2>
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
-                        <button id="loadSessionLogsAdminBtn" class="action-btn">Carica Log</button>
-                        <select id="logFilterRoleAdmin" style="flex: 0 0 auto; width: auto; margin: 0;">
-                            <option value="">Tutti i ruoli</option>
-                            <option value="admin">Admin</option>
-                            <option value="developer">Developer</option>
-                            <option value="publisher">Publisher</option>
-                        </select>
-                        <select id="logFilterActionAdmin" style="flex: 0 0 auto; width: auto; margin: 0;">
-                            <option value="">Tutte le azioni</option>
-                            <option value="login">Login</option>
-                            <option value="logout">Logout</option>
-                            <option value="create_flyer">Creazione Flyer</option>
-                            <option value="edit_flyer">Modifica Flyer</option>
-                            <option value="delete_flyer">Eliminazione Flyer</option>
-                            <option value="approve_request">Approva Richiesta</option>
-                            <option value="reject_request">Rifiuta Richiesta</option>
-                            <option value="manage_user">Gestione Utente</option>
-                        </select>
-                        <input type="number" id="logLimitAdmin" placeholder="Limite (default 50)" min="1" max="500" style="flex: 0 0 auto; width: 150px; margin: 0;">
+                        <div class="flyer-section">
+                            <h3>La Tua Lista Visibilità Flyer</h3>
+                            <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i tuoi flyer privati. Admin e Developer sono sempre inclusi.</p>
+                            <div style="margin-bottom: 1.5rem;">
+                                <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti Disponibili</h4>
+                                <div id="publisherListAvailableUsers" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem;"></div>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti nella Lista</h4>
+                                <div id="publisherListContainer"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="sessionLogsContainerAdmin"></div>
-                </div>
-            </div>
 
-            <div id="adminMapView" class="view-container" style="display: none;">
-                <div id="adminMap" class="map-container"></div>
-            </div>
-        </div>
+                    <div id="adminPanelPage" class="page">
+                        <h2>Admin Panel</h2>
+                        <p>Controllo completo del sistema</p>
 
-        <div id="developerSection" style="display: none;">
-            <nav id="developerNavbar">
-                <h2>Benvenuto Developer</h2>
-                <div class="nav-buttons">
-                    <button id="developerViewSwitchBtn" class="view-switch-btn">Mappa</button>
-                    <button id="developerLogoutBtn">Logout</button>
-                </div>
-            </nav>
-            <div class="content">
-                <h1>Dashboard Developer</h1>
-                <p>Gestisci i permessi e i flyer.</p>
-            </div>
+                        <div class="flyer-section">
+                            <h3>Richieste Flyer in Attesa</h3>
+                            <div id="requestsContainerAdmin"></div>
+                        </div>
 
-            <div id="developerFlyerView" class="view-container">
-                <div class="flyer-section">
-                    <h2>Eventi</h2>
-                    <button id="addFlyerBtnDev" class="action-btn">Aggiungi Flyer</button>
-                    <div class="filter-container">
-                        <select id="filterTypeDateDeveloper" class="filter-select">
-                            <option value="exact">Data esatta</option>
-                            <option value="from">Da questa data</option>
-                            <option value="until">Entro questa data</option>
-                        </select>
-                        <input type="date" id="filterDateDeveloper">
-                        <select id="filterCrewDeveloper" class="filter-select">
-                            <option value="">Tutte le crew</option>
-                        </select>
-                        <button id="applyFiltersDeveloper" class="filter-btn">Filtra</button>
-                        <button id="resetFiltersDeveloper" class="filter-btn reset-btn">Reset</button>
+                        <div class="flyer-section">
+                            <h3>Gestione Utenti Publisher</h3>
+                            <div id="publishersContainerAdmin"></div>
+                        </div>
+
+                        <div class="flyer-section">
+                            <h3>Log Sessioni Utenti</h3>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                                <button id="loadSessionLogsAdminBtn" class="action-btn">Carica Log</button>
+                                <select id="logFilterRoleAdmin" style="flex: 0 0 auto; width: auto; margin: 0;">
+                                    <option value="">Tutti i ruoli</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="developer">Developer</option>
+                                    <option value="publisher">Publisher</option>
+                                </select>
+                                <select id="logFilterActionAdmin" style="flex: 0 0 auto; width: auto; margin: 0;">
+                                    <option value="">Tutte le azioni</option>
+                                    <option value="login">Login</option>
+                                    <option value="logout">Logout</option>
+                                    <option value="create_flyer">Creazione Flyer</option>
+                                    <option value="edit_flyer">Modifica Flyer</option>
+                                    <option value="delete_flyer">Eliminazione Flyer</option>
+                                    <option value="approve_request">Approva Richiesta</option>
+                                    <option value="reject_request">Rifiuta Richiesta</option>
+                                    <option value="manage_user">Gestione Utente</option>
+                                </select>
+                                <input type="number" id="logLimitAdmin" placeholder="Limite (default 50)" min="1" max="500" style="flex: 0 0 auto; width: 150px; margin: 0;">
+                            </div>
+                            <div id="sessionLogsContainerAdmin"></div>
+                        </div>
                     </div>
-                    <div id="flyerContainerDeveloper"></div>
-                </div>
 
-                <div class="flyer-section">
-                    <h2>Richieste Flyer in Attesa</h2>
-                    <div id="requestsContainerDeveloper"></div>
-                </div>
+                    <div id="developerPanelPage" class="page">
+                        <h2>Developer Panel</h2>
+                        <p>Gestione permessi e configurazioni</p>
 
-                <div class="flyer-section">
-                    <h2>Gestione Utenti Publisher</h2>
-                    <div id="publishersContainer"></div>
-                </div>
+                        <div class="flyer-section">
+                            <h3>Richieste Flyer in Attesa</h3>
+                            <div id="requestsContainerDeveloper"></div>
+                        </div>
 
-                <div class="flyer-section">
-                    <h2>Lista Standard Visibilità Flyer</h2>
-                    <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i flyer con visibilità "Lista Standard".</p>
-                    <div style="margin-bottom: 1.5rem;">
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti Disponibili</h3>
-                        <div id="developerListAvailableUsers" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem;"></div>
+                        <div class="flyer-section">
+                            <h3>Gestione Utenti Publisher</h3>
+                            <div id="publishersContainer"></div>
+                        </div>
+
+                        <div class="flyer-section">
+                            <h3>Lista Standard Visibilità Flyer</h3>
+                            <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i flyer con visibilità "Lista Standard".</p>
+                            <div style="margin-bottom: 1.5rem;">
+                                <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti Disponibili</h4>
+                                <div id="developerListAvailableUsers" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem;"></div>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti nella Lista</h4>
+                                <div id="developerListContainer"></div>
+                            </div>
+                        </div>
+
+                        <div class="flyer-section">
+                            <h3>Log Sessioni Utenti</h3>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                                <button id="loadSessionLogsBtn" class="action-btn">Carica Log</button>
+                                <select id="logFilterRole" style="flex: 0 0 auto; width: auto; margin: 0;">
+                                    <option value="">Tutti i ruoli</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="developer">Developer</option>
+                                    <option value="publisher">Publisher</option>
+                                </select>
+                                <select id="logFilterAction" style="flex: 0 0 auto; width: auto; margin: 0;">
+                                    <option value="">Tutte le azioni</option>
+                                    <option value="login">Login</option>
+                                    <option value="logout">Logout</option>
+                                    <option value="create_flyer">Creazione Flyer</option>
+                                    <option value="edit_flyer">Modifica Flyer</option>
+                                    <option value="delete_flyer">Eliminazione Flyer</option>
+                                    <option value="approve_request">Approva Richiesta</option>
+                                    <option value="reject_request">Rifiuta Richiesta</option>
+                                    <option value="manage_user">Gestione Utente</option>
+                                </select>
+                                <input type="number" id="logLimit" placeholder="Limite (default 50)" min="1" max="500" style="flex: 0 0 auto; width: 150px; margin: 0;">
+                            </div>
+                            <div id="sessionLogsContainer"></div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti nella Lista</h3>
-                        <div id="developerListContainer"></div>
-                    </div>
-                </div>
-
-                <div class="flyer-section">
-                    <h2>Log Sessioni Utenti</h2>
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
-                        <button id="loadSessionLogsBtn" class="action-btn">Carica Log</button>
-                        <select id="logFilterRole" style="flex: 0 0 auto; width: auto; margin: 0;">
-                            <option value="">Tutti i ruoli</option>
-                            <option value="admin">Admin</option>
-                            <option value="developer">Developer</option>
-                            <option value="publisher">Publisher</option>
-                        </select>
-                        <select id="logFilterAction" style="flex: 0 0 auto; width: auto; margin: 0;">
-                            <option value="">Tutte le azioni</option>
-                            <option value="login">Login</option>
-                            <option value="logout">Logout</option>
-                            <option value="create_flyer">Creazione Flyer</option>
-                            <option value="edit_flyer">Modifica Flyer</option>
-                            <option value="delete_flyer">Eliminazione Flyer</option>
-                            <option value="approve_request">Approva Richiesta</option>
-                            <option value="reject_request">Rifiuta Richiesta</option>
-                            <option value="manage_user">Gestione Utente</option>
-                        </select>
-                        <input type="number" id="logLimit" placeholder="Limite (default 50)" min="1" max="500" style="flex: 0 0 auto; width: 150px; margin: 0;">
-                    </div>
-                    <div id="sessionLogsContainer"></div>
-                </div>
-            </div>
-
-            <div id="developerMapView" class="view-container" style="display: none;">
-                <div id="developerMap" class="map-container"></div>
-            </div>
-        </div>
-
-        <div id="publisherSection" style="display: none;">
-            <nav id="publisherNavbar">
-                <h2>Benvenuto Publisher</h2>
-                <div class="nav-buttons">
-                    <button id="publisherViewSwitchBtn" class="view-switch-btn">Mappa</button>
-                    <button id="publisherLogoutBtn">Logout</button>
-                </div>
-            </nav>
-            <div class="content">
-                <h1>Dashboard Publisher</h1>
-                <p>Crea e gestisci i tuoi flyer.</p>
-                <p id="publisherFideltyStatus"></p>
-            </div>
-
-            <div id="publisherFlyerView" class="view-container">
-                <div class="flyer-section">
-                    <h2>Eventi</h2>
-                    <button id="addFlyerBtnPublisher" class="action-btn">Aggiungi Flyer</button>
-                    <div class="filter-container">
-                        <select id="filterTypeDatePublisher" class="filter-select">
-                            <option value="exact">Data esatta</option>
-                            <option value="from">Da questa data</option>
-                            <option value="until">Entro questa data</option>
-                        </select>
-                        <input type="date" id="filterDatePublisher">
-                        <select id="filterCrewPublisher" class="filter-select">
-                            <option value="">Tutte le crew</option>
-                        </select>
-                        <button id="applyFiltersPublisher" class="filter-btn">Filtra</button>
-                        <button id="resetFiltersPublisher" class="filter-btn reset-btn">Reset</button>
-                    </div>
-                    <div id="flyerContainerPublisher"></div>
-                </div>
-
-                <div class="flyer-section">
-                    <h2>Tue Richieste</h2>
-                    <div id="myRequestsContainer"></div>
-                </div>
-
-                <div class="flyer-section">
-                    <h2>La Tua Lista Visibilità Flyer</h2>
-                    <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i tuoi flyer privati. Admin e Developer sono sempre inclusi.</p>
-                    <div style="margin-bottom: 1.5rem;">
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti Disponibili</h3>
-                        <div id="publisherListAvailableUsers" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem;"></div>
-                    </div>
-                    <div>
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Utenti nella Lista</h3>
-                        <div id="publisherListContainer"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="publisherMapView" class="view-container" style="display: none;">
-                <div id="publisherMap" class="map-container"></div>
+                </main>
             </div>
         </div>
 
@@ -499,6 +426,4 @@
 
         <script type="module" src="app.js"></script>
     </body>
-
-
 </html>
