@@ -23,24 +23,36 @@
 
             <div id="loginModal" class="modal">
                 <div class="modal-content">
-                    <span class="close" data-modal="loginModal">&times;</span>
-                    <h2>Login</h2>
+                    <div class="modal-header">
+                        <span class="close" data-modal="loginModal">&times;</span>
+                        <h2>Login</h2>
+                    </div>
                     <form id="loginForm">
-                        <input type="text" id="loginNickname" placeholder="Nickname" required>
-                        <input type="password" id="loginPassword" placeholder="Password" required>
-                        <button type="submit">Accedi</button>
+                        <div class="modal-body">
+                            <input type="text" id="loginNickname" placeholder="Nickname" required>
+                            <input type="password" id="loginPassword" placeholder="Password" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit">Accedi</button>
+                        </div>
                     </form>
                 </div>
             </div>
 
             <div id="registerModal" class="modal">
                 <div class="modal-content">
-                    <span class="close" data-modal="registerModal">&times;</span>
-                    <h2>Registrati</h2>
+                    <div class="modal-header">
+                        <span class="close" data-modal="registerModal">&times;</span>
+                        <h2>Registrati</h2>
+                    </div>
                     <form id="registerForm">
-                        <input type="text" id="registerNickname" placeholder="Nickname" required>
-                        <input type="password" id="registerPassword" placeholder="Password" required>
-                        <button type="submit">Registrati</button>
+                        <div class="modal-body">
+                            <input type="text" id="registerNickname" placeholder="Nickname" required>
+                            <input type="password" id="registerPassword" placeholder="Password" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit">Registrati</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -177,65 +189,76 @@
 
         <div id="flyerModal" class="modal">
             <div class="modal-content">
-                <span class="close" data-modal="flyerModal">&times;</span>
-                <h2 id="flyerModalTitle">Aggiungi Flyer</h2>
+                <div class="modal-header">
+                    <span class="close" data-modal="flyerModal">&times;</span>
+                    <h2 id="flyerModalTitle">Aggiungi Flyer</h2>
+                </div>
                 <form id="flyerForm">
-                    <input type="hidden" id="flyerId">
-                    <input type="text" id="flyerNome" placeholder="Nome Evento" required>
-                    <input type="date" id="flyerData" required>
-                    <input type="text" id="flyerCrew" placeholder="Crew" required>
-                    <textarea id="flyerDescrizione" placeholder="Descrizione" rows="4" required></textarea>
+                    <div class="modal-body">
+                        <input type="hidden" id="flyerId">
+                        <input type="text" id="flyerNome" placeholder="Nome Evento" required>
+                        <input type="date" id="flyerData" required>
+                        <input type="text" id="flyerCrew" placeholder="Crew" required>
+                        <textarea id="flyerDescrizione" placeholder="Descrizione" rows="3" required></textarea>
 
-                    <div class="location-section">
-                        <label style="display: block; margin-bottom: 10px; font-weight: bold;">Posizione Evento</label>
+                        <div class="location-section">
+                            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Posizione Evento</label>
 
-                        <div class="location-input-group">
-                            <input type="text" id="flyerAddress" placeholder="Cerca indirizzo...">
-                            <button type="button" id="searchAddressBtn" class="icon-btn" title="Cerca indirizzo">🔍</button>
-                            <button type="button" id="selectOnMapBtn" class="icon-btn" title="Seleziona sulla mappa">📍</button>
-                        </div>
+                            <div class="location-input-group">
+                                <input type="text" id="flyerAddress" placeholder="Cerca indirizzo...">
+                                <button type="button" id="searchAddressBtn" class="icon-btn" title="Cerca indirizzo">🔍</button>
+                                <button type="button" id="selectOnMapBtn" class="icon-btn" title="Seleziona sulla mappa">📍</button>
+                            </div>
 
-                        <div id="addressSuggestions" class="address-suggestions"></div>
+                            <div id="addressSuggestions" class="address-suggestions"></div>
 
-                        <div id="mapPickerContainer" class="map-picker-container" style="display: none;">
-                            <p style="margin: 10px 0; color: #666; font-size: 14px;">Clicca sulla mappa per selezionare la posizione</p>
-                            <div id="mapPicker" style="height: 250px; border-radius: 8px;"></div>
-                            <button type="button" id="confirmLocationBtn" class="confirm-btn" style="margin-top: 10px;">Conferma Posizione</button>
-                        </div>
+                            <div id="mapPickerContainer" class="map-picker-container" style="display: none;">
+                                <p style="margin: 10px 0; color: #666; font-size: 14px;">Clicca sulla mappa per selezionare la posizione</p>
+                                <div id="mapPicker" style="height: 200px; border-radius: 8px;"></div>
+                                <button type="button" id="confirmLocationBtn" class="confirm-btn" style="margin-top: 10px;">Conferma Posizione</button>
+                            </div>
 
-                        <input type="hidden" id="flyerLatitude">
-                        <input type="hidden" id="flyerLongitude">
+                            <input type="hidden" id="flyerLatitude">
+                            <input type="hidden" id="flyerLongitude">
 
-                        <div id="selectedLocationDisplay" class="selected-location" style="display: none;">
-                            <p style="margin: 10px 0; color: #28a745; font-size: 14px;">
-                                ✓ Posizione selezionata: <span id="selectedLocationText"></span>
-                            </p>
+                            <div id="selectedLocationDisplay" class="selected-location" style="display: none;">
+                                <p style="margin: 10px 0; color: #28a745; font-size: 14px;">
+                                    ✓ Posizione selezionata: <span id="selectedLocationText"></span>
+                                </p>
+                            </div>
                         </div>
                     </div>
-
-                    <button type="submit">Salva</button>
+                    <div class="modal-footer">
+                        <button type="submit">Salva</button>
+                    </div>
                 </form>
             </div>
         </div>
 
         <div id="userManagementModal" class="modal">
             <div class="modal-content">
-                <span class="close" data-modal="userManagementModal">&times;</span>
-                <h2>Gestisci Permessi Publisher</h2>
-                <div id="userManagementContent">
-                    <p><strong>Nickname:</strong> <span id="managedUserNickname"></span></p>
-                    <p><strong>Fidelty attuale:</strong> <span id="managedUserFidelty"></span></p>
-                    <form id="userManagementForm">
-                        <input type="hidden" id="managedUserNicknameInput">
-                        <label for="newFidelty">Nuovo stato Fidelty:</label>
-                        <select id="newFidelty" required>
-                            <option value="friendly">Friendly (può postare direttamente)</option>
-                            <option value="pending">Pending (deve fare richieste)</option>
-                            <option value="restricted">Restricted (non può postare)</option>
-                        </select>
-                        <button type="submit">Aggiorna</button>
-                    </form>
+                <div class="modal-header">
+                    <span class="close" data-modal="userManagementModal">&times;</span>
+                    <h2>Gestisci Permessi Publisher</h2>
                 </div>
+                <form id="userManagementForm">
+                    <div class="modal-body">
+                        <div id="userManagementContent">
+                            <p><strong>Nickname:</strong> <span id="managedUserNickname"></span></p>
+                            <p><strong>Fidelty attuale:</strong> <span id="managedUserFidelty"></span></p>
+                            <input type="hidden" id="managedUserNicknameInput">
+                            <label for="newFidelty">Nuovo stato Fidelty:</label>
+                            <select id="newFidelty" required>
+                                <option value="friendly">Friendly (può postare direttamente)</option>
+                                <option value="pending">Pending (deve fare richieste)</option>
+                                <option value="restricted">Restricted (non può postare)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit">Aggiorna</button>
+                    </div>
+                </form>
             </div>
         </div>
 
