@@ -1729,26 +1729,28 @@ function setupFilters(role, containerId) {
     const dateInput = document.getElementById(`filterDate${role}`);
     const crewSelect = document.getElementById(`filterCrew${role}`);
 
-    if (!applyBtn || !resetBtn) return;
+    if (!applyBtn || !resetBtn) {
+        devLog(`Filtri per ${role} non trovati`, 'warning');
+        return;
+    }
 
     applyBtn.addEventListener('click', () => {
         const dateType = dateTypeSelect?.value || 'exact';
         const dateFilter = dateInput?.value || '';
         const crewFilter = crewSelect?.value || '';
 
+        devLog(`Applicazione filtri per ${role}: dateType=${dateType}, date=${dateFilter}, crew=${crewFilter}`, 'info');
+
         let filtered = [...allFlyers];
 
         if (dateFilter) {
-            const filterDate = new Date(dateFilter);
             filtered = filtered.filter(f => {
-                const flyerDate = new Date(f.data);
-
                 if (dateType === 'exact') {
                     return f.data === dateFilter;
                 } else if (dateType === 'from') {
-                    return flyerDate >= filterDate;
+                    return f.data >= dateFilter;
                 } else if (dateType === 'until') {
-                    return flyerDate <= filterDate;
+                    return f.data <= dateFilter;
                 }
                 return true;
             });
@@ -1764,7 +1766,7 @@ function setupFilters(role, containerId) {
         const isPublisher = role === 'Publisher' && currentUser?.role === 'publisher';
         renderFlyers(filtered, containerId, isAdmin || isPublisher);
 
-        devLog(`Filtri applicati per ${role}: ${filtered.length} flyer trovati`, 'success');
+        devLog(`Filtri applicati per ${role}: ${filtered.length} flyer trovati su ${allFlyers.length}`, 'success');
     });
 
     resetBtn.addEventListener('click', () => {
@@ -1779,6 +1781,8 @@ function setupFilters(role, containerId) {
 
         devLog(`Filtri resettati per ${role}`, 'info');
     });
+
+    devLog(`Filtri configurati per ${role}`, 'success');
 }
 
 setupFilters('Auth', 'flyerContainer');
