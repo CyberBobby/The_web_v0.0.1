@@ -209,6 +209,7 @@ function showDashboard(role) {
         adminSection.style.display = 'block';
         loadFlyers();
         loadFlyerRequests('admin');
+        loadPublishers();
     } else if (role === 'developer') {
         devLog('Dashboard developer visualizzata', 'success');
         developerSection.style.display = 'block';
