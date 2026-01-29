@@ -110,7 +110,33 @@
 
                 <div class="flyer-section">
                     <h2>Gestione Utenti Publisher</h2>
-                    <div id="publishersContainer"></div>
+                    <div id="publishersContainerAdmin"></div>
+                </div>
+
+                <div class="flyer-section">
+                    <h2>Log Sessioni Utenti</h2>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <button id="loadSessionLogsAdminBtn" class="action-btn">Carica Log</button>
+                        <select id="logFilterRoleAdmin" style="flex: 0 0 auto; width: auto; margin: 0;">
+                            <option value="">Tutti i ruoli</option>
+                            <option value="admin">Admin</option>
+                            <option value="developer">Developer</option>
+                            <option value="publisher">Publisher</option>
+                        </select>
+                        <select id="logFilterActionAdmin" style="flex: 0 0 auto; width: auto; margin: 0;">
+                            <option value="">Tutte le azioni</option>
+                            <option value="login">Login</option>
+                            <option value="logout">Logout</option>
+                            <option value="create_flyer">Creazione Flyer</option>
+                            <option value="edit_flyer">Modifica Flyer</option>
+                            <option value="delete_flyer">Eliminazione Flyer</option>
+                            <option value="approve_request">Approva Richiesta</option>
+                            <option value="reject_request">Rifiuta Richiesta</option>
+                            <option value="manage_user">Gestione Utente</option>
+                        </select>
+                        <input type="number" id="logLimitAdmin" placeholder="Limite (default 50)" min="1" max="500" style="flex: 0 0 auto; width: 150px; margin: 0;">
+                    </div>
+                    <div id="sessionLogsContainerAdmin"></div>
                 </div>
             </div>
 

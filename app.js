@@ -820,14 +820,15 @@ async function loadPublishers() {
 
         if (error) throw error;
 
-        renderPublishers(data);
+        renderPublishers(data, 'publishersContainer');
+        renderPublishers(data, 'publishersContainerAdmin');
     } catch (error) {
         devLog(`Errore caricamento publishers: ${error.message}`, 'error');
     }
 }
 
-function renderPublishers(publishers) {
-    const container = document.getElementById('publishersContainer');
+function renderPublishers(publishers, containerId) {
+    const container = document.getElementById(containerId);
     if (!container) return;
 
     if (!publishers || publishers.length === 0) {
@@ -1075,15 +1076,19 @@ document.getElementById('exportDbBtn')?.addEventListener('click', async () => {
 });
 
 document.getElementById('loadSessionLogsBtn')?.addEventListener('click', async () => {
-    await loadSessionLogs();
+    await loadSessionLogs('sessionLogsContainer', 'logFilterRole', 'logFilterAction', 'logLimit');
 });
 
-async function loadSessionLogs() {
+document.getElementById('loadSessionLogsAdminBtn')?.addEventListener('click', async () => {
+    await loadSessionLogs('sessionLogsContainerAdmin', 'logFilterRoleAdmin', 'logFilterActionAdmin', 'logLimitAdmin');
+});
+
+async function loadSessionLogs(containerId, roleFilterId, actionFilterId, limitId) {
     devLog('Caricamento session logs...', 'info');
 
-    const roleFilter = document.getElementById('logFilterRole')?.value || '';
-    const actionFilter = document.getElementById('logFilterAction')?.value || '';
-    const limit = parseInt(document.getElementById('logLimit')?.value) || 50;
+    const roleFilter = document.getElementById(roleFilterId)?.value || '';
+    const actionFilter = document.getElementById(actionFilterId)?.value || '';
+    const limit = parseInt(document.getElementById(limitId)?.value) || 50;
 
     try {
         let query = supabase
@@ -1104,7 +1109,7 @@ async function loadSessionLogs() {
 
         if (error) throw error;
 
-        renderSessionLogs(data || []);
+        renderSessionLogs(data || [], containerId);
         devLog(`Log caricati: ${data?.length || 0} record`, 'success');
     } catch (error) {
         devLog(`Errore caricamento log: ${error.message}`, 'error');
@@ -1112,8 +1117,8 @@ async function loadSessionLogs() {
     }
 }
 
-function renderSessionLogs(logs) {
-    const container = document.getElementById('sessionLogsContainer');
+function renderSessionLogs(logs, containerId) {
+    const container = document.getElementById(containerId);
     if (!container) return;
 
     if (!logs || logs.length === 0) {
