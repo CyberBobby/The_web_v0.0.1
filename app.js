@@ -369,6 +369,8 @@ async function loadFlyers() {
 
         allFlyers = data;
 
+        populateCrewFilters();
+
         renderFlyers(data, 'flyerContainer', false);
         renderFlyers(data, 'flyerContainerUser', false);
         renderFlyers(data, 'flyerContainerAdmin', true);
@@ -380,6 +382,27 @@ async function loadFlyers() {
         devLog(`Errore durante il caricamento dei flyer: ${error.message}`, 'error');
         console.error('Errore caricamento flyer:', error);
     }
+}
+
+function populateCrewFilters() {
+    const crews = [...new Set(allFlyers.map(f => f.crew))].sort();
+
+    const roles = ['Auth', 'User', 'Admin', 'Developer', 'Publisher'];
+
+    roles.forEach(role => {
+        const select = document.getElementById(`filterCrew${role}`);
+        if (select) {
+            select.innerHTML = '<option value="">Tutte le crew</option>';
+            crews.forEach(crew => {
+                const option = document.createElement('option');
+                option.value = crew;
+                option.textContent = crew;
+                select.appendChild(option);
+            });
+        }
+    });
+
+    devLog(`Popolati filtri crew con ${crews.length} crew uniche`, 'success');
 }
 
 function reloadMapMarkers() {
@@ -1702,23 +1725,37 @@ function openFlyerDetailModal(flyerId) {
 function setupFilters(role, containerId) {
     const applyBtn = document.getElementById(`applyFilters${role}`);
     const resetBtn = document.getElementById(`resetFilters${role}`);
+    const dateTypeSelect = document.getElementById(`filterTypeDate${role}`);
     const dateInput = document.getElementById(`filterDate${role}`);
-    const crewInput = document.getElementById(`filterCrew${role}`);
+    const crewSelect = document.getElementById(`filterCrew${role}`);
 
     if (!applyBtn || !resetBtn) return;
 
     applyBtn.addEventListener('click', () => {
+        const dateType = dateTypeSelect?.value || 'exact';
         const dateFilter = dateInput?.value || '';
-        const crewFilter = crewInput?.value.toLowerCase() || '';
+        const crewFilter = crewSelect?.value || '';
 
         let filtered = [...allFlyers];
 
         if (dateFilter) {
-            filtered = filtered.filter(f => f.data === dateFilter);
+            const filterDate = new Date(dateFilter);
+            filtered = filtered.filter(f => {
+                const flyerDate = new Date(f.data);
+
+                if (dateType === 'exact') {
+                    return f.data === dateFilter;
+                } else if (dateType === 'from') {
+                    return flyerDate >= filterDate;
+                } else if (dateType === 'until') {
+                    return flyerDate <= filterDate;
+                }
+                return true;
+            });
         }
 
         if (crewFilter) {
-            filtered = filtered.filter(f => f.crew.toLowerCase().includes(crewFilter));
+            filtered = filtered.filter(f => f.crew === crewFilter);
         }
 
         filteredFlyers[role] = filtered;
@@ -1731,8 +1768,9 @@ function setupFilters(role, containerId) {
     });
 
     resetBtn.addEventListener('click', () => {
+        if (dateTypeSelect) dateTypeSelect.value = 'exact';
         if (dateInput) dateInput.value = '';
-        if (crewInput) crewInput.value = '';
+        if (crewSelect) crewSelect.value = '';
         filteredFlyers[role] = [];
 
         const isAdmin = role === 'Admin' || role === 'Developer';

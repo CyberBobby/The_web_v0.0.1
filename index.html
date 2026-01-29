@@ -19,8 +19,15 @@
             <div class="flyer-section">
                 <h2>Eventi</h2>
                 <div class="filter-container">
-                    <input type="date" id="filterDateAuth" placeholder="Filtra per data">
-                    <input type="text" id="filterCrewAuth" placeholder="Filtra per crew">
+                    <select id="filterTypeDateAuth" class="filter-select">
+                        <option value="exact">Data esatta</option>
+                        <option value="from">Da questa data</option>
+                        <option value="until">Entro questa data</option>
+                    </select>
+                    <input type="date" id="filterDateAuth">
+                    <select id="filterCrewAuth" class="filter-select">
+                        <option value="">Tutte le crew</option>
+                    </select>
                     <button id="applyFiltersAuth" class="filter-btn">Filtra</button>
                     <button id="resetFiltersAuth" class="filter-btn reset-btn">Reset</button>
                 </div>
@@ -81,8 +88,15 @@
                 <div class="flyer-section">
                     <h2>Eventi</h2>
                     <div class="filter-container">
-                        <input type="date" id="filterDateUser" placeholder="Filtra per data">
-                        <input type="text" id="filterCrewUser" placeholder="Filtra per crew">
+                        <select id="filterTypeDateUser" class="filter-select">
+                            <option value="exact">Data esatta</option>
+                            <option value="from">Da questa data</option>
+                            <option value="until">Entro questa data</option>
+                        </select>
+                        <input type="date" id="filterDateUser">
+                        <select id="filterCrewUser" class="filter-select">
+                            <option value="">Tutte le crew</option>
+                        </select>
                         <button id="applyFiltersUser" class="filter-btn">Filtra</button>
                         <button id="resetFiltersUser" class="filter-btn reset-btn">Reset</button>
                     </div>
@@ -113,8 +127,15 @@
                     <h2>Eventi</h2>
                     <button id="addFlyerBtnAdmin" class="action-btn">Aggiungi Flyer</button>
                     <div class="filter-container">
-                        <input type="date" id="filterDateAdmin" placeholder="Filtra per data">
-                        <input type="text" id="filterCrewAdmin" placeholder="Filtra per crew">
+                        <select id="filterTypeDateAdmin" class="filter-select">
+                            <option value="exact">Data esatta</option>
+                            <option value="from">Da questa data</option>
+                            <option value="until">Entro questa data</option>
+                        </select>
+                        <input type="date" id="filterDateAdmin">
+                        <select id="filterCrewAdmin" class="filter-select">
+                            <option value="">Tutte le crew</option>
+                        </select>
                         <button id="applyFiltersAdmin" class="filter-btn">Filtra</button>
                         <button id="resetFiltersAdmin" class="filter-btn reset-btn">Reset</button>
                     </div>
@@ -181,8 +202,15 @@
                     <h2>Eventi</h2>
                     <button id="addFlyerBtnDev" class="action-btn">Aggiungi Flyer</button>
                     <div class="filter-container">
-                        <input type="date" id="filterDateDeveloper" placeholder="Filtra per data">
-                        <input type="text" id="filterCrewDeveloper" placeholder="Filtra per crew">
+                        <select id="filterTypeDateDeveloper" class="filter-select">
+                            <option value="exact">Data esatta</option>
+                            <option value="from">Da questa data</option>
+                            <option value="until">Entro questa data</option>
+                        </select>
+                        <input type="date" id="filterDateDeveloper">
+                        <select id="filterCrewDeveloper" class="filter-select">
+                            <option value="">Tutte le crew</option>
+                        </select>
                         <button id="applyFiltersDeveloper" class="filter-btn">Filtra</button>
                         <button id="resetFiltersDeveloper" class="filter-btn reset-btn">Reset</button>
                     </div>
@@ -250,8 +278,15 @@
                     <h2>Eventi</h2>
                     <button id="addFlyerBtnPublisher" class="action-btn">Aggiungi Flyer</button>
                     <div class="filter-container">
-                        <input type="date" id="filterDatePublisher" placeholder="Filtra per data">
-                        <input type="text" id="filterCrewPublisher" placeholder="Filtra per crew">
+                        <select id="filterTypeDatePublisher" class="filter-select">
+                            <option value="exact">Data esatta</option>
+                            <option value="from">Da questa data</option>
+                            <option value="until">Entro questa data</option>
+                        </select>
+                        <input type="date" id="filterDatePublisher">
+                        <select id="filterCrewPublisher" class="filter-select">
+                            <option value="">Tutte le crew</option>
+                        </select>
                         <button id="applyFiltersPublisher" class="filter-btn">Filtra</button>
                         <button id="resetFiltersPublisher" class="filter-btn reset-btn">Reset</button>
                     </div>
