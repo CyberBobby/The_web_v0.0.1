@@ -1911,11 +1911,20 @@ async function loadUsersForDeveloperDropdown() {
 
         const availableUsers = (allUsers || []).filter(u => !existingIds.includes(u.id));
 
-        const select = document.getElementById('developerListUserSelect');
-        if (!select) return;
+        const container = document.getElementById('developerListAvailableUsers');
+        if (!container) return;
 
-        select.innerHTML = '<option value="">-- Seleziona un utente da aggiungere --</option>' +
-            availableUsers.map(u => `<option value="${u.id}" data-nickname="${u.nickname}">${u.nickname}</option>`).join('');
+        if (availableUsers.length === 0) {
+            container.innerHTML = '<p style="color: #666; padding: 10px;">Tutti gli utenti sono già nella lista</p>';
+            return;
+        }
+
+        container.innerHTML = availableUsers.map(u => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; background-color: #fff;">
+                <span>${u.nickname}</span>
+                <button onclick="addToDeveloperListDirect('${u.id}', '${u.nickname}')" class="action-btn" style="padding: 4px 12px; margin: 0; font-size: 1.2rem; line-height: 1;">+</button>
+            </div>
+        `).join('');
 
         devLog(`${availableUsers.length} utenti disponibili per la lista standard`, 'info');
     } catch (error) {
@@ -1993,16 +2002,7 @@ async function removeFromDeveloperList(itemId) {
     }
 }
 
-async function addToDeveloperListFromDropdown() {
-    const select = document.getElementById('developerListUserSelect');
-    if (!select || !select.value) {
-        alert('Seleziona un utente da aggiungere');
-        return;
-    }
-
-    const userId = select.value;
-    const nickname = select.options[select.selectedIndex].getAttribute('data-nickname');
-
+window.addToDeveloperListDirect = async function(userId, nickname) {
     try {
         const { error } = await supabase
             .from('developer_list')
@@ -2021,11 +2021,6 @@ async function addToDeveloperListFromDropdown() {
         devLog(`Errore aggiunta utente: ${error.message}`, 'error');
         alert('Errore durante l\'aggiunta: ' + error.message);
     }
-}
-
-const addToDeveloperListBtn = document.getElementById('addToDeveloperListBtn');
-if (addToDeveloperListBtn) {
-    addToDeveloperListBtn.addEventListener('click', addToDeveloperListFromDropdown);
 }
 
 async function loadUsersForPublisherDropdown() {
@@ -2054,11 +2049,20 @@ async function loadUsersForPublisherDropdown() {
             u.role !== 'developer'
         );
 
-        const select = document.getElementById('publisherListUserSelect');
-        if (!select) return;
+        const container = document.getElementById('publisherListAvailableUsers');
+        if (!container) return;
 
-        select.innerHTML = '<option value="">-- Seleziona un utente da aggiungere --</option>' +
-            availableUsers.map(u => `<option value="${u.id}" data-nickname="${u.nickname}">${u.nickname}</option>`).join('');
+        if (availableUsers.length === 0) {
+            container.innerHTML = '<p style="color: #666; padding: 10px;">Tutti gli utenti sono già nella tua lista</p>';
+            return;
+        }
+
+        container.innerHTML = availableUsers.map(u => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; background-color: #fff;">
+                <span>${u.nickname}</span>
+                <button onclick="addToPublisherListDirect('${u.id}', '${u.nickname}')" class="action-btn" style="padding: 4px 12px; margin: 0; font-size: 1.2rem; line-height: 1;">+</button>
+            </div>
+        `).join('');
 
         devLog(`${availableUsers.length} utenti disponibili per la tua lista`, 'info');
     } catch (error) {
@@ -2138,16 +2142,7 @@ async function removeFromPublisherList(itemId) {
     }
 }
 
-async function addToPublisherListFromDropdown() {
-    const select = document.getElementById('publisherListUserSelect');
-    if (!select || !select.value) {
-        alert('Seleziona un utente da aggiungere');
-        return;
-    }
-
-    const userId = select.value;
-    const nickname = select.options[select.selectedIndex].getAttribute('data-nickname');
-
+window.addToPublisherListDirect = async function(userId, nickname) {
     try {
         const { error } = await supabase
             .from('publisher_lists')
@@ -2166,11 +2161,6 @@ async function addToPublisherListFromDropdown() {
         devLog(`Errore aggiunta utente: ${error.message}`, 'error');
         alert('Errore durante l\'aggiunta: ' + error.message);
     }
-}
-
-const addToPublisherListBtn = document.getElementById('addToPublisherListBtn');
-if (addToPublisherListBtn) {
-    addToPublisherListBtn.addEventListener('click', addToPublisherListFromDropdown);
 }
 
 if (currentUser?.role === 'developer' || currentUser?.role === 'admin') {
