@@ -388,7 +388,7 @@ async function loadFlyers() {
 
 async function filterFlyersByVisibility(flyers) {
     if (!currentUser) {
-        return flyers.filter(f => f.visibility_type === 'all');
+        return flyers.filter(f => f.visibility_type === 'all' || !f.visibility_type);
     }
 
     if (currentUser.role === 'admin' || currentUser.role === 'developer') {
@@ -404,25 +404,17 @@ async function filterFlyersByVisibility(flyers) {
 
         const isInDevList = !!devList;
 
-        let publisherLists = [];
-        if (currentUser.role === 'publisher') {
-            const { data: pubLists } = await supabase
-                .from('publisher_lists')
-                .select('publisher_id')
-                .eq('allowed_user_id', currentUser.id);
+        const { data: pubLists } = await supabase
+            .from('publisher_lists')
+            .select('publisher_id')
+            .eq('allowed_user_id', currentUser.id);
 
-            publisherLists = pubLists ? pubLists.map(p => p.publisher_id) : [];
-        } else {
-            const { data: pubLists } = await supabase
-                .from('publisher_lists')
-                .select('publisher_id')
-                .eq('allowed_user_id', currentUser.id);
-
-            publisherLists = pubLists ? pubLists.map(p => p.publisher_id) : [];
-        }
+        const publisherLists = pubLists ? pubLists.map(p => p.publisher_id) : [];
 
         return flyers.filter(f => {
-            if (f.visibility_type === 'all') return true;
+            if (!f.visibility_type || f.visibility_type === 'all') return true;
+
+            if (f.created_by_id === currentUser.id) return true;
 
             if (f.visibility_type === 'developer_list') {
                 return isInDevList;
@@ -436,7 +428,7 @@ async function filterFlyersByVisibility(flyers) {
         });
     } catch (error) {
         devLog(`Errore filtraggio visibilità: ${error.message}`, 'error');
-        return flyers.filter(f => f.visibility_type === 'all');
+        return flyers.filter(f => f.visibility_type === 'all' || !f.visibility_type);
     }
 }
 
@@ -785,6 +777,7 @@ async function createFlyerRequest(flyerData) {
     devLog('Creazione richiesta flyer...', 'info');
 
     const requestData = {
+        publisher_id: currentUser.id,
         publisher_nickname: currentUser.nickname,
         nome: flyerData.nome,
         data: flyerData.data,
@@ -794,6 +787,8 @@ async function createFlyerRequest(flyerData) {
         longitude: flyerData.longitude,
         address: flyerData.address,
         image_url: flyerData.image_url || null,
+        visibility_type: flyerData.visibility_type || 'all',
+        show_location: flyerData.show_location !== false,
         status: 'pending'
     };
 
@@ -951,7 +946,10 @@ window.approveRequest = async function(requestId) {
             latitude: request.latitude,
             longitude: request.longitude,
             address: request.address,
-            image_url: request.image_url || null
+            image_url: request.image_url || null,
+            visibility_type: request.visibility_type || 'all',
+            show_location: request.show_location !== false,
+            created_by_id: request.publisher_id
         };
 
         const { error: insertError } = await supabase
@@ -1892,6 +1890,39 @@ setupFilters('Admin', 'flyerContainerAdmin');
 setupFilters('Developer', 'flyerContainerDeveloper');
 setupFilters('Publisher', 'flyerContainerPublisher');
 
+async function loadUsersForDeveloperDropdown() {
+    if (currentUser?.role !== 'developer' && currentUser?.role !== 'admin') return;
+
+    try {
+        const { data: allUsers, error: usersError } = await supabase
+            .from('users')
+            .select('id, nickname')
+            .order('nickname', { ascending: true });
+
+        if (usersError) throw usersError;
+
+        const { data: existing, error: existingError } = await supabase
+            .from('developer_list')
+            .select('user_id');
+
+        if (existingError) throw existingError;
+
+        const existingIds = existing ? existing.map(e => e.user_id) : [];
+
+        const availableUsers = (allUsers || []).filter(u => !existingIds.includes(u.id));
+
+        const select = document.getElementById('developerListUserSelect');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Seleziona un utente da aggiungere --</option>' +
+            availableUsers.map(u => `<option value="${u.id}" data-nickname="${u.nickname}">${u.nickname}</option>`).join('');
+
+        devLog(`${availableUsers.length} utenti disponibili per la lista standard`, 'info');
+    } catch (error) {
+        devLog(`Errore caricamento utenti: ${error.message}`, 'error');
+    }
+}
+
 async function loadDeveloperList() {
     if (currentUser?.role !== 'developer' && currentUser?.role !== 'admin') return;
 
@@ -1907,16 +1938,34 @@ async function loadDeveloperList() {
         if (!container) return;
 
         if (!data || data.length === 0) {
-            container.innerHTML = '<p style="color: #666;">Nessun utente nella lista.</p>';
+            container.innerHTML = '<p style="color: #666; margin-top: 10px;">Nessun utente nella lista.</p>';
             return;
         }
 
-        container.innerHTML = data.map(item => `
-            <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
-                <span>${item.user_nickname}</span>
-                <button onclick="removeFromDeveloperList('${item.id}')" class="delete-btn" style="padding: 5px 10px;">Rimuovi</button>
-            </div>
-        `).join('');
+        const table = `
+            <table class="flyer-table" style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Nickname</th>
+                        <th>Aggiunto il</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(item => `
+                        <tr>
+                            <td>${item.user_nickname}</td>
+                            <td>${new Date(item.added_at).toLocaleDateString('it-IT')}</td>
+                            <td>
+                                <button onclick="removeFromDeveloperList('${item.id}')" class="delete-btn" style="padding: 5px 10px;">Rimuovi</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        container.innerHTML = table;
 
         devLog(`Caricati ${data.length} utenti nella lista standard`, 'success');
     } catch (error) {
@@ -1936,39 +1985,24 @@ async function removeFromDeveloperList(itemId) {
         if (error) throw error;
 
         devLog('Utente rimosso dalla lista standard', 'success');
-        loadDeveloperList();
+        await loadDeveloperList();
+        await loadUsersForDeveloperDropdown();
     } catch (error) {
         devLog(`Errore rimozione: ${error.message}`, 'error');
         alert('Errore durante la rimozione: ' + error.message);
     }
 }
 
-async function searchUsersForDeveloperList(query) {
-    if (!query || query.length < 2) return [];
-
-    try {
-        const { data, error } = await supabase
-            .from('users')
-            .select('id, nickname')
-            .ilike('nickname', `%${query}%`)
-            .limit(10);
-
-        if (error) throw error;
-
-        const { data: existing } = await supabase
-            .from('developer_list')
-            .select('user_id');
-
-        const existingIds = existing ? existing.map(e => e.user_id) : [];
-
-        return (data || []).filter(u => !existingIds.includes(u.id));
-    } catch (error) {
-        devLog(`Errore ricerca utenti: ${error.message}`, 'error');
-        return [];
+async function addToDeveloperListFromDropdown() {
+    const select = document.getElementById('developerListUserSelect');
+    if (!select || !select.value) {
+        alert('Seleziona un utente da aggiungere');
+        return;
     }
-}
 
-async function addToDeveloperList(userId, nickname) {
+    const userId = select.value;
+    const nickname = select.options[select.selectedIndex].getAttribute('data-nickname');
+
     try {
         const { error } = await supabase
             .from('developer_list')
@@ -1981,41 +2015,55 @@ async function addToDeveloperList(userId, nickname) {
         if (error) throw error;
 
         devLog(`${nickname} aggiunto alla lista standard`, 'success');
-        loadDeveloperList();
-        document.getElementById('developerListSearch').value = '';
-        document.getElementById('developerListSearchResults').style.display = 'none';
+        await loadDeveloperList();
+        await loadUsersForDeveloperDropdown();
     } catch (error) {
         devLog(`Errore aggiunta utente: ${error.message}`, 'error');
         alert('Errore durante l\'aggiunta: ' + error.message);
     }
 }
 
-const developerListSearch = document.getElementById('developerListSearch');
-if (developerListSearch) {
-    developerListSearch.addEventListener('input', async (e) => {
-        const query = e.target.value;
-        const resultsContainer = document.getElementById('developerListSearchResults');
+const addToDeveloperListBtn = document.getElementById('addToDeveloperListBtn');
+if (addToDeveloperListBtn) {
+    addToDeveloperListBtn.addEventListener('click', addToDeveloperListFromDropdown);
+}
 
-        if (query.length < 2) {
-            resultsContainer.style.display = 'none';
-            return;
-        }
+async function loadUsersForPublisherDropdown() {
+    if (currentUser?.role !== 'publisher') return;
 
-        const users = await searchUsersForDeveloperList(query);
+    try {
+        const { data: allUsers, error: usersError } = await supabase
+            .from('users')
+            .select('id, nickname, role')
+            .order('nickname', { ascending: true });
 
-        if (users.length === 0) {
-            resultsContainer.innerHTML = '<p style="padding: 10px; color: #666;">Nessun utente trovato</p>';
-            resultsContainer.style.display = 'block';
-            return;
-        }
+        if (usersError) throw usersError;
 
-        resultsContainer.innerHTML = users.map(u => `
-            <div onclick="addToDeveloperList('${u.id}', '${u.nickname}')" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; hover: background-color: #f5f5f5;">
-                ${u.nickname}
-            </div>
-        `).join('');
-        resultsContainer.style.display = 'block';
-    });
+        const { data: existing, error: existingError } = await supabase
+            .from('publisher_lists')
+            .select('allowed_user_id')
+            .eq('publisher_id', currentUser.id);
+
+        if (existingError) throw existingError;
+
+        const existingIds = existing ? existing.map(e => e.allowed_user_id) : [];
+
+        const availableUsers = (allUsers || []).filter(u =>
+            !existingIds.includes(u.id) &&
+            u.role !== 'admin' &&
+            u.role !== 'developer'
+        );
+
+        const select = document.getElementById('publisherListUserSelect');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Seleziona un utente da aggiungere --</option>' +
+            availableUsers.map(u => `<option value="${u.id}" data-nickname="${u.nickname}">${u.nickname}</option>`).join('');
+
+        devLog(`${availableUsers.length} utenti disponibili per la tua lista`, 'info');
+    } catch (error) {
+        devLog(`Errore caricamento utenti: ${error.message}`, 'error');
+    }
 }
 
 async function loadPublisherList() {
@@ -2036,14 +2084,30 @@ async function loadPublisherList() {
         let html = '<p style="margin-bottom: 10px; padding: 10px; background-color: #e8f5e9; border-radius: 4px; color: #2e7d32;">✓ Admin e Developer hanno sempre accesso</p>';
 
         if (!data || data.length === 0) {
-            html += '<p style="color: #666;">Nessun altro utente nella tua lista.</p>';
+            html += '<p style="color: #666; margin-top: 10px;">Nessun altro utente nella tua lista.</p>';
         } else {
-            html += data.map(item => `
-                <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
-                    <span>${item.allowed_user_nickname}</span>
-                    <button onclick="removeFromPublisherList('${item.id}')" class="delete-btn" style="padding: 5px 10px;">Rimuovi</button>
-                </div>
-            `).join('');
+            html += `
+                <table class="flyer-table" style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>Nickname</th>
+                            <th>Aggiunto il</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(item => `
+                            <tr>
+                                <td>${item.allowed_user_nickname}</td>
+                                <td>${new Date(item.added_at).toLocaleDateString('it-IT')}</td>
+                                <td>
+                                    <button onclick="removeFromPublisherList('${item.id}')" class="delete-btn" style="padding: 5px 10px;">Rimuovi</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
         }
 
         container.innerHTML = html;
@@ -2066,44 +2130,24 @@ async function removeFromPublisherList(itemId) {
         if (error) throw error;
 
         devLog('Utente rimosso dalla tua lista', 'success');
-        loadPublisherList();
+        await loadPublisherList();
+        await loadUsersForPublisherDropdown();
     } catch (error) {
         devLog(`Errore rimozione: ${error.message}`, 'error');
         alert('Errore durante la rimozione: ' + error.message);
     }
 }
 
-async function searchUsersForPublisherList(query) {
-    if (!query || query.length < 2) return [];
-
-    try {
-        const { data, error } = await supabase
-            .from('users')
-            .select('id, nickname, role')
-            .ilike('nickname', `%${query}%`)
-            .limit(10);
-
-        if (error) throw error;
-
-        const { data: existing } = await supabase
-            .from('publisher_lists')
-            .select('allowed_user_id')
-            .eq('publisher_id', currentUser.id);
-
-        const existingIds = existing ? existing.map(e => e.allowed_user_id) : [];
-
-        return (data || []).filter(u =>
-            !existingIds.includes(u.id) &&
-            u.role !== 'admin' &&
-            u.role !== 'developer'
-        );
-    } catch (error) {
-        devLog(`Errore ricerca utenti: ${error.message}`, 'error');
-        return [];
+async function addToPublisherListFromDropdown() {
+    const select = document.getElementById('publisherListUserSelect');
+    if (!select || !select.value) {
+        alert('Seleziona un utente da aggiungere');
+        return;
     }
-}
 
-async function addToPublisherList(userId, nickname) {
+    const userId = select.value;
+    const nickname = select.options[select.selectedIndex].getAttribute('data-nickname');
+
     try {
         const { error } = await supabase
             .from('publisher_lists')
@@ -2116,47 +2160,25 @@ async function addToPublisherList(userId, nickname) {
         if (error) throw error;
 
         devLog(`${nickname} aggiunto alla tua lista`, 'success');
-        loadPublisherList();
-        document.getElementById('publisherListSearch').value = '';
-        document.getElementById('publisherListSearchResults').style.display = 'none';
+        await loadPublisherList();
+        await loadUsersForPublisherDropdown();
     } catch (error) {
         devLog(`Errore aggiunta utente: ${error.message}`, 'error');
         alert('Errore durante l\'aggiunta: ' + error.message);
     }
 }
 
-const publisherListSearch = document.getElementById('publisherListSearch');
-if (publisherListSearch) {
-    publisherListSearch.addEventListener('input', async (e) => {
-        const query = e.target.value;
-        const resultsContainer = document.getElementById('publisherListSearchResults');
-
-        if (query.length < 2) {
-            resultsContainer.style.display = 'none';
-            return;
-        }
-
-        const users = await searchUsersForPublisherList(query);
-
-        if (users.length === 0) {
-            resultsContainer.innerHTML = '<p style="padding: 10px; color: #666;">Nessun utente trovato</p>';
-            resultsContainer.style.display = 'block';
-            return;
-        }
-
-        resultsContainer.innerHTML = users.map(u => `
-            <div onclick="addToPublisherList('${u.id}', '${u.nickname}')" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; hover: background-color: #f5f5f5;">
-                ${u.nickname}
-            </div>
-        `).join('');
-        resultsContainer.style.display = 'block';
-    });
+const addToPublisherListBtn = document.getElementById('addToPublisherListBtn');
+if (addToPublisherListBtn) {
+    addToPublisherListBtn.addEventListener('click', addToPublisherListFromDropdown);
 }
 
 if (currentUser?.role === 'developer' || currentUser?.role === 'admin') {
     loadDeveloperList();
+    loadUsersForDeveloperDropdown();
 }
 
 if (currentUser?.role === 'publisher') {
     loadPublisherList();
+    loadUsersForPublisherDropdown();
 }

@@ -230,9 +230,11 @@
                 <div class="flyer-section">
                     <h2>Lista Standard Visibilità Flyer</h2>
                     <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i flyer con visibilità "Lista Standard".</p>
-                    <div style="margin-bottom: 1rem;">
-                        <input type="text" id="developerListSearch" placeholder="Cerca utente da aggiungere..." style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;">
-                        <div id="developerListSearchResults" style="border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                    <div style="margin-bottom: 1rem; display: flex; gap: 10px; align-items: center;">
+                        <select id="developerListUserSelect" style="flex: 1; padding: 0.5rem;">
+                            <option value="">-- Seleziona un utente da aggiungere --</option>
+                        </select>
+                        <button id="addToDeveloperListBtn" class="action-btn" style="margin: 0;">Aggiungi</button>
                     </div>
                     <div id="developerListContainer"></div>
                 </div>
@@ -311,9 +313,11 @@
                 <div class="flyer-section">
                     <h2>La Tua Lista Visibilità Flyer</h2>
                     <p style="margin-bottom: 1rem; color: #666;">Gestisci quali utenti possono vedere i tuoi flyer privati. Admin e Developer sono sempre inclusi.</p>
-                    <div style="margin-bottom: 1rem;">
-                        <input type="text" id="publisherListSearch" placeholder="Cerca utente da aggiungere..." style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;">
-                        <div id="publisherListSearchResults" style="border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                    <div style="margin-bottom: 1rem; display: flex; gap: 10px; align-items: center;">
+                        <select id="publisherListUserSelect" style="flex: 1; padding: 0.5rem;">
+                            <option value="">-- Seleziona un utente da aggiungere --</option>
+                        </select>
+                        <button id="addToPublisherListBtn" class="action-btn" style="margin: 0;">Aggiungi</button>
                     </div>
                     <div id="publisherListContainer"></div>
                 </div>
