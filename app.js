@@ -960,6 +960,30 @@ document.getElementById('clearDbBtn')?.addEventListener('click', async () => {
     }
 });
 
+document.getElementById('cleanupOldLogsBtn')?.addEventListener('click', async () => {
+    devLog('Pulizia log vecchi in corso...', 'info');
+    try {
+        const { data: beforeCount } = await supabase
+            .from('session_logs')
+            .select('*', { count: 'exact', head: true });
+
+        const { data, error } = await supabase.rpc('cleanup_old_session_logs');
+
+        if (error) throw error;
+
+        const { data: afterCount } = await supabase
+            .from('session_logs')
+            .select('*', { count: 'exact', head: true });
+
+        const deleted = (beforeCount?.length || 0) - (afterCount?.length || 0);
+        devLog(`Pulizia completata: ${deleted} log eliminati (più vecchi di 14 giorni)`, 'success');
+        alert(`${deleted} log vecchi eliminati!`);
+    } catch (error) {
+        devLog(`Errore pulizia log: ${error.message}`, 'error');
+        alert('Errore durante la pulizia: ' + error.message);
+    }
+});
+
 document.getElementById('exportDbBtn')?.addEventListener('click', async () => {
     devLog('Esportazione dati in corso...', 'info');
     try {
